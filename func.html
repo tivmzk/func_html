@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>기능</title>
+
+		<script src="jquery.js"></script>
+		<script src="script.js"></script>
+
+		<link rel="stylesheet" href="style.css" />
+	</head>
+
+	<body>
+		<div class="popup">
+			<p>실행 완료</p>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>목록에서 중복 제거</h3>
+				<button type="button" id="btnFunc1">실행</button>
+			</div>
+			<textarea id="taFunc1"></textarea>
+		</div>
+
+		<div class="section2">
+			<div class="secTit">
+				<h3>두 목록에서 서로 다른 부분 찾기</h3>
+				<button type="button" id="btnFunc2">실행</button>
+			</div>
+			<div>
+				<input type="checkbox" id="cbFunc2_1" value="Y" />
+				<label for="cbFunc2_1">띄어쓰기 제거</label>
+				<input type="checkbox" id="cbFunc2_2" value="Y" />
+				<label for="cbFunc2_2">대문자로 통일</label>
+			</div>
+			<div class="div">
+				<div>
+					<h4>입력1</h4>
+					<textarea id="taFunc2_1"></textarea>
+				</div>
+				<div>
+					<h4>입력2</h4>
+					<textarea id="taFunc2_2"></textarea>
+				</div>
+			</div>
+			<div id="resultFunc2"></div>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>스네이크 케이스 → 캐멀 케이스 (DATA_SN→dataSn)</h3>
+				<button type="button" id="btnFunc3">실행</button>
+			</div>
+			<textarea id="taFunc3"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>캐멀 케이스 → 스네이크 케이스 (dataSn→DATA_SN)</h3>
+				<button type="button" id="btnFunc4">실행</button>
+			</div>
+			<textarea id="taFunc4"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>hidden input 태그 생성</h3>
+				<button type="button" id="btnFunc5">실행</button>
+			</div>
+			<textarea id="taFunc5"></textarea>
+		</div>
+
+		<div class="section3">
+			<div class="secTit">
+				<h3>좌우에 감싸기</h3>
+				<button type="button" id="btnFunc6">실행</button>
+			</div>
+			<div class="div">
+				<input id="taFunc6_1" type="text" />
+				<textarea id="taFunc6_2"></textarea>
+				<input id="taFunc6_3" type="text" />
+			</div>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>줄바꿈 2개를 1개로</h3>
+				<button type="button" id="btnFunc7">실행</button>
+			</div>
+			<textarea id="taFunc7"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>웹접근성 테이블 이미지를 텍스트로</h3>
+				<button type="button" id="btnFunc8">실행</button>
+			</div>
+			<textarea id="taFunc8" placeholder=""></textarea>
+			<p>컬럼명<br>
+				값1<br>
+				값2<br>
+				값3<br>
+				<br>
+				컬럼명<br>
+				값1<br>
+				값2<br>
+				값3</p>
+			<span>-></span>
+			<p>컬럼명 / 컬럼명 | <br>
+				값1 / 값1 | <br>
+				값2 / 값2 | <br>
+				값3 / 값3 | </p>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>자주 사용하는 스크립트 복사</h3>
+			</div>
+			<div>
+				<div style="margin-bottom: 20px">
+					<button type="button" id="btnFunc9_1">대전대 게시물 확인</button>
+					<button type="button" id="btnFunc9_8">대전대 콘텐츠 확인</button>
+					<button type="button" id="btnFunc9_9">대전대 게시물 일괄 확인</button>
+				</div>
+				<div style="margin-bottom: 20px">
+					<button type="button" id="btnFunc9_2">전남 게시물 확인</button>
+					<button type="button" id="btnFunc9_3">전남 게시물 이미지 입력</button>
+					<button type="button" id="btnFunc9_4">전남 게시물 일자로 검색 함수</button>
+					<button type="button" id="btnFunc9_5">전남 콘텐츠 확인</button>
+					<button type="button" id="btnFunc9_6">전남 이미지 게시판의 게시물 대체텍스트 자동 입력</button>
+					<button type="button" id="btnFunc9_7">전남 게시물 일괄 확인</button>
+				</div>
+				<div>
+					<button type="button" id="btnFunc9_10">테이블 내용 추출</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="section4">
+			<div class="secTit">
+				<h3>두 테이블의 순서 맞추기</h3>
+				<div>
+					<button type="button" id="btnFunc10_1">추가</button>
+					<button type="button" id="btnFunc10_2">실행</button>
+					<button type="button" id="btnFunc10_3">복사</button>
+				</div>
+			</div>
+			<div class="div">
+				<table id="tbFunc10_1">
+					<thead></thead>
+					<tbody></tbody>
+				</table>
+				<table id="tbFunc10_2">
+					<thead></thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="section4">
+			<div class="secTit">
+				<h3>문자열 반복 생성</h3>
+				<div>
+					<button type="button" id="btnFunc11_1">추가</button>
+					<button type="button" id="btnFunc11_2">실행</button>
+				</div>
+			</div>
+			<textarea id="taFunc11"></textarea>
+			<div class="div">
+				<table id="tbFunc11">
+					<thead><tr></tr></thead>
+					<tbody><tr></tr></tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>문자 변환</h3>
+				<button type="button" id="btnFunc12">실행</button>
+			</div>
+			<input id="inFunc12_1" type="text" placeholder="before" />
+			<input id="inFunc12_2" type="text" placeholder="after" />
+			<textarea id="taFunc12"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>날짜 변환(대전대 학사일정) 1. 1. (목)→2024/01/01</h3>
+				<button type="button" id="btnFunc13">실행</button>
+			</div>
+			<input id="inFunc13" type="text" placeholder="2024" />
+			<textarea id="taFunc13"></textarea>
+			<p style="width: 1000px">
+				INSERT INTO TAP_SC_SCHDUL_MANAGE(SCHDUL_SEQ,BGNDE,ENDDE,BGNDE_TIME,ENDDE_TIME,SCHDUL_CN,SCHDUL_TITLE,SYS_ID,ALLDAY_AT,HLDY_YN,COLOR)
+				<br />
+				VALUES(SEQ_SCHDUL_SN.NEXTVAL,'^0^','^1^','00:00:00','00:00:00','^2^','^2^','#{sysId}','Y',NULL,'#99CCFF');
+			</p>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>svn 파일 경로 수정</h3>
+				<button type="button" id="btnFunc14">실행</button>
+			</div>
+			<textarea id="taFunc14"></textarea>
+			<p>M klic.nForU_v3.2_cnu_Mentoring\src\main\java\egovframework\nfu\ad\as\web\AsAssnController.java</p>
+			<span>-></span>
+			<p>/webapp/WEB-INF/classes/egovframework/nfu/ad/as/web/AsAssnController.class</p>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>목록 정렬</h3>
+				<div>
+					<select id="selFunc15_1">
+						<option value="char">문자</option>
+						<option value="num">숫자</option>
+					</select>
+					<select id="selFunc15_2">
+						<option value="asc">오름차순</option>
+						<option value="desc">내림차순</option>
+					</select>
+					<button type="button" id="btnFunc15">실행</button>
+				</div>
+			</div>
+			<textarea id="taFunc15"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>목록 개수 구하기</h3>
+				<button type="button" id="btnFunc16">실행</button>
+			</div>
+			<textarea id="taFunc16"></textarea>
+			<p id="pFunc16"></p>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>앞에 붙은 숫자 채우기</h3>
+				<button type="button" id="btnFunc17">실행</button>
+			</div>
+			<div>
+				<input type="radio" name="rdFunc17" value="left" id="rdFunc17_left" />
+				<label for="rdFunc17_left">왼쪽</label>
+				<input type="radio" name="rdFunc17" value="right" id="rdFunc17_right" />
+				<label for="rdFunc17_right">오른쪽</label>
+				<input type="number" id="inpFunc17_1" placeholder="길이 입력" title="길이" />
+				<input type="text" id="inpFunc17_2" placeholder="채움 문자" title="채움 문자" maxlength="1" />
+			</div>
+			<textarea id="taFunc17"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>폴더 생성 배치 명령어 생성</h3>
+				<button type="button" id="btnFunc18">실행</button>
+			</div>
+			<input id="inFunc18_1" type="text" placeholder="폴더 경로" />
+			<textarea id="taFunc18"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>문자열 추출</h3>
+				<button type="button" id="btnFunc19">실행</button>
+			</div>
+			<input id="inFunc19_1" type="text" placeholder="시작" />
+			<span>와</span>
+			<input id="inFunc19_2" type="text" placeholder="끝" />
+			<span>사이</span>
+			<textarea id="taFunc19_1"></textarea>
+			<span>결과</span>
+			<textarea id="taFunc19_2"></textarea>
+		</div>
+
+		<div class="section1">
+			<div class="secTit">
+				<h3>숫자 생성</h3>
+				<button type="button" id="btnFunc20">실행</button>
+			</div>
+			<input id="inFunc20_1" type="number" placeholder="시작" />
+			<span>~</span>
+			<input id="inFunc20_2" type="number" placeholder="끝" />
+		</div>
+	</body>
+</html>
