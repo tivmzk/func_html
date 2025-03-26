@@ -714,8 +714,18 @@ extractTableData("");`);
     });
     // 문자 변환
     $('#btnFunc12').click(function () {
-        var before = $('#inFunc12_1').val().replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
-        var after = $('#inFunc12_2').val().replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
+        var before = $('#inFunc12_1').val();
+        var after = $('#inFunc12_2').val();
+
+        if($('#chkFunc12').is(':checked')) {
+            before = new RegExp(before, 'g');
+            after = after.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
+        }
+        else{
+            before = before.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
+            after = after.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
+        }
+
         var result = $('#taFunc12').val().replaceAll(before, after);
         copy(result);
         $('#taFunc12').val(result);
