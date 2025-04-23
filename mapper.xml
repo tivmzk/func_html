@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="|NAMESPACE|">
+<!--  시스템 리스트 통계 sql -->
+	<sql id="select|KEYWORD|State">
+		SELECT COUNT(*) AS CNT
+		FROM   |TABLE_NAME| |ALIAS|
+		WHERE  |ALIAS|.SYS_ID = SM.SYS_ID  
+	</sql>
+	
+	<!--  시스템 리스트 sql -->
+	<sql id="select|KEYWORD|SmList">
+		SELECT IT.INST_CD
+			  ,IT.INST_NM
+			  ,IT.INST_SE_NM
+			  ,SM.SYS_ID
+			  ,SM.SYS_NM 
+			  ,( <include refid="select|KEYWORD|State" /> ) AS TOTAL_CNT
+			  FROM TAP_IM_INST_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INST_CD = SM.INST_CD
+			  AND SM.SYS_STTS_NM = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(authrt) || authrt != "master"'>
+			 AND SM.SYS_ID NOT IN ('apple')
+			</if>
+			
+			<if test="@egovframework.MybatisUtils@isNotEmpty(mbrId)">
+			  AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHRT_MBR 
+					 WHERE MBR_ID = #{mbrId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHRT_CD IN (1,2)	
+				)
+			 </if>
+			 
+			<if test="@egovframework.MybatisUtils@isNotEmpty(instCd)">
+			 AND   ( IT.INST_CD =  #{instCd}
+			 
+						OR  IT.UP_INST_CD = #{upInstCd}
+						OR  IT.BSCS_INST_CD = #{bscsInstCd}
+						
+				   	)
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+			 AND   ( IT.INST_GRD_NM IS NULL
+			 
+			 		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+						OR IT.INST_GRD_NM = #{dtnt}
+					 </if>
+					 
+				   )
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(sysTypeNm)">
+			  AND   SM.SYS_TYPE_NM = #{sysTypeNm}
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   AND  (  		 
+	   				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+			  	  OR SM.SYS_TYPE_NM like '%'||#{srchTxt}||'%' 
+					  	 
+			   )
+			</if>
+			 
+			 ORDER BY   IT.INST_CD, IT.INST_LEVEL_NO DESC
+	</sql>
+	
+	<!--  시스템 리스트 -->
+	<select id="select|KEYWORD|SmList" parameterType="map" resultType="egovMap">
+		<include refid="select|KEYWORD|SmList"/> 
+	</select>
+	
+	<!--  시스템 페이징 -->
+	<select id="select|KEYWORD|SmListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+			PL.*
+		FROM (
+			SELECT 
+				PO.*
+				,rownum as rsn
+			FROM (
+				<include refid="select|KEYWORD|SmList" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!--  시스템 페이징 카운트 -->
+	<select id="select|KEYWORD|SmListPagingCount" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*)
+			FROM TAP_IM_INST_MANAGE IT, TAP_SM_SYS_MANAGE SM 
+			  WHERE IT.INST_CD = SM.INST_CD
+			  AND SM.SYS_STTS_NM = 'O'
+			
+			<if test='@egovframework.MybatisUtils@isEmpty(authrt) || authrt != "master"'>
+			 AND SM.SYS_ID NOT IN ('apple')
+			</if>
+			
+			<if test="@egovframework.MybatisUtils@isNotEmpty(instCd)">
+			 AND   ( IT.INST_CD =  #{instCd}
+			 
+						OR  IT.UP_INST_CD = #{upInstCd}
+						OR  IT.BSCS_INST_CD = #{bscsInstCd}
+						
+				   	)
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(insttGrad)">
+			 AND   ( IT.INST_GRD_NM IS NULL
+			 
+			 		 <if test="@egovframework.MybatisUtils@isNotEmpty(dtnt)">
+						OR IT.INST_GRD_NM = #{dtnt}
+					 </if>
+					 
+				   )
+			 </if>
+			
+			<if test="@egovframework.MybatisUtils@isNotEmpty(mbrId)">
+			  AND SM.SYS_ID IN (
+					SELECT SYS_ID
+					  FROM TAP_AU_AUTHRT_MBR 
+					 WHERE MBR_ID = #{mbrId}
+						   AND SYS_ID != 'apple'
+					   AND AUTHRT_CD IN (1,2)	
+				)
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(sysTypeNm)">
+			  AND   SM.SYS_TYPE_NM = #{sysTypeNm}
+			 </if>
+			 
+			 <if test="@egovframework.MybatisUtils@isNotEmpty(srchTxt)">
+			   AND  (  		 
+	   				 SM.SYS_NM like '%'||#{srchTxt}||'%'
+			  	  OR SM.SYS_TYPE_NM like '%'||#{srchTxt}||'%' 
+					  	 
+			   )
+			</if>
+			 
+			 ORDER BY   IT.INST_CD, IT.INST_LEVEL_NO DESC
+	</select>
+   <!--  총관리자 리스트 -->
+   
+   <!-- |DATA_NAME| 테이블 쿼리 -->
+	<sql id="select|KEYWORD|Sql">
+		SELECT
+			|SELECT_COLUMNS|
+		FROM |TABLE_NAME| |ALIAS|
+	</sql>
+	
+	<sql id="select|KEYWORD|Where">
+		WHERE 1=1
+		AND |ALIAS|.SYS_ID = #{sysId}
+		ORDER BY |ALIAS|.|P_KEY| DESC
+	</sql>
+	
+	<!-- |DATA_NAME| 리스트 조회 쿼리 -->
+	<sql id="select|KEYWORD|List">
+		<include refid="select|KEYWORD|Sql"></include>
+		<include refid="select|KEYWORD|Where"></include>
+	</sql>
+	
+	<!-- |DATA_NAME| 리스트 조회 -->
+	<select id="select|KEYWORD|List" parameterType="map" resultType="egovMap">
+		<include refid="select|KEYWORD|List"></include>
+	</select>
+	
+	<!-- |DATA_NAME| 리스트 페이지 조회 -->
+	<select id="select|KEYWORD|ListPaging" parameterType="map" resultType="egovMap">
+		SELECT
+			PL.*
+		FROM (
+			SELECT 
+				PO.*
+				,rownum as rsn
+			FROM (
+				<include refid="select|KEYWORD|List" /> 
+				) PO
+		) PL
+		WHERE
+		<![CDATA[
+			rsn <= #{maxSn} 
+			AND rsn > #{minSn}
+		]]>
+	</select>
+	
+	<!-- |DATA_NAME| 리스트 페이지 카운트 조회 -->
+	<select id="select|KEYWORD|ListPagingCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM (<include refid="select|KEYWORD|List" /> )
+	</select>
+	
+	<!-- |DATA_NAME| 단건 조회 -->
+	<select id="select|KEYWORD|Info" parameterType="map" resultType="egovMap">
+		<include refid="select|KEYWORD|Sql"></include>
+		WHERE |ALIAS|.|P_KEY| = #{|P_KEY_SNAKE|}
+	</select>
+	
+	<!-- |DATA_NAME| 등록 -->
+	<insert id="insert|KEYWORD|Info" parameterType="map">
+		<selectKey keyProperty="|P_KEY_SNAKE|" resultType="java.lang.Integer" order="BEFORE">
+			SELECT SEQ_|P_KEY|.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO |TABLE_NAME|(
+			|INSERT_COLUMNS|
+		)
+		VALUES(
+			|INSERT_COLUMNS2|
+		)
+	</insert>
+	
+	<!-- |DATA_NAME| 수정 -->
+	<update id="update|KEYWORD|Info" parameterType="map">
+		UPDATE |TABLE_NAME|
+		SET
+			|UPDATE_COLUMNS|
+		WHERE |P_KEY| = #{|P_KEY_SNAKE|}
+	</update>
+	
+	<!-- |DATA_NAME| 삭제 -->
+	<delete id="delete|KEYWORD|Info" parameterType="map">
+		DELETE FROM |TABLE_NAME|
+		WHERE |P_KEY| = #{|P_KEY_SNAKE|}
+	</delete>
+</mapper>

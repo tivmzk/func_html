@@ -925,6 +925,73 @@ extractTableData("");`);
         copy(result);
     });
 
+    // CRUD Mapper 생성기
+    $('#btnFunc21').click(function(){
+        const mapperFile = $('#fileFunc21')[0].files[0];
+        if(mapperFile){
+            const reader = new FileReader();
+
+          reader.onload = function(e) {
+            const fileContent = e.target.result;
+            const namespace = $('#inFunc21_1').val();
+            const keyword = $('#inFunc21_2').val();
+            const tableName = $('#inFunc21_3').val();
+            const alias = $('#inFunc21_4').val();
+            const pKey = $('#inFunc21_5').val();
+            const dataName = $('#inFunc21_6').val();
+            const columns = $('#taFunc21_1').val().split('\n');
+            let selectColumns = '';
+            let insertColumns = '';
+            let insertColumns2 = '';
+            let updateColumns = '';
+
+            for(let i = 0; i < columns.length; i++){
+               const col = columns[i];
+               if(i != 0){
+                    selectColumns += '\t\t\t,';
+                    insertColumns += '\t\t\t,';
+                    insertColumns2 += '\t\t\t,';
+                    updateColumns += '\t\t\t,';
+               }
+               selectColumns += alias + '.' + col;
+               insertColumns += col;
+               insertColumns2 += `#{${toCamelCase(col)}}`;
+               updateColumns += `${col} = #{${toCamelCase(col)}}`;
+               if(i != columns.length - 1){
+                    selectColumns += '\n';
+                    insertColumns += '\n';
+                    insertColumns2 += '\n';
+                    updateColumns += '\n';
+               }
+            }
+
+            let result = fileContent;
+            result = result.replaceAll('|NAMESPACE|', namespace);
+            result = result.replaceAll('|KEYWORD|', keyword);
+            result = result.replaceAll('|TABLE_NAME|', tableName);
+            result = result.replaceAll('|ALIAS|', alias);
+            result = result.replaceAll('|P_KEY|', pKey);
+            result = result.replaceAll('|P_KEY_SNAKE|', toCamelCase(pKey));
+            result = result.replaceAll('|DATA_NAME|', dataName);
+            result = result.replaceAll('|SELECT_COLUMNS|', selectColumns);
+            result = result.replaceAll('|INSERT_COLUMNS|', insertColumns);
+            result = result.replaceAll('|INSERT_COLUMNS2|', insertColumns2);
+            result = result.replaceAll('|UPDATE_COLUMNS|', updateColumns);
+
+            copy(result);
+          };
+
+          reader.onerror = function(e) {
+            console.error('파일 읽기 오류:', e);
+          };
+
+          reader.readAsText(mapperFile);
+        }
+        else{
+            alert('파일 먼저 선택');
+        }
+    });
+
     // 버튼 클릭 시 팝업 출력
     $('button').click(function () {
         showPopup();
@@ -979,5 +1046,13 @@ extractTableData("");`);
             r += str;
         }
         return r;
+    }
+    // 캬멜 케이스로 수정
+    function toCamelCase(str){
+        str = str.toLowerCase();
+        var result = str.replace(/_([a-z])/g, function (match, letter) {
+            return letter.toUpperCase();
+        });
+        return result;
     }
 });
