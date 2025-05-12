@@ -926,19 +926,30 @@ extractTableData("");`);
     });
 
     // CRUD Mapper 생성기
-    $('#btnFunc21').click(function(){
-        const mapperFile = $('#fileFunc21')[0].files[0];
-        if(mapperFile){
+    $('#btnFunc21_1, #btnFunc21_2').click(function(){
+        var readFile = null;
+        if($(this).attr('id') == 'btnFunc21_1'){
+            readFile = $('#fileFunc21_1')[0].files[0];
+        }
+        else if($(this).attr('id') == 'btnFunc21_2'){
+            readFile = $('#fileFunc21_2')[0].files[0];
+        }
+        
+        if(readFile){
             const reader = new FileReader();
 
           reader.onload = function(e) {
             const fileContent = e.target.result;
             const namespace = $('#inFunc21_1').val();
             const keyword = $('#inFunc21_2').val();
+            const keyword2 = keyword.replace(/^./, match => match.toLowerCase());
             const tableName = $('#inFunc21_3').val();
             const alias = $('#inFunc21_4').val();
+            const aliasUpper = alias.toUpperCase();
+            const aliasLower = alias.toLowerCase();
             const pKey = $('#inFunc21_5').val();
             const dataName = $('#inFunc21_6').val();
+            const path = $('#inFunc21_7').val();
             const columns = $('#taFunc21_1').val().split('\n');
             let selectColumns = '';
             let insertColumns = '';
@@ -953,7 +964,7 @@ extractTableData("");`);
                     insertColumns2 += '\t\t\t,';
                     updateColumns += '\t\t\t,';
                }
-               selectColumns += alias + '.' + col;
+               selectColumns += aliasUpper + '.' + col;
                insertColumns += col;
                insertColumns2 += `#{${toCamelCase(col)}}`;
                updateColumns += `${col} = #{${toCamelCase(col)}}`;
@@ -968,11 +979,15 @@ extractTableData("");`);
             let result = fileContent;
             result = result.replaceAll('|NAMESPACE|', namespace);
             result = result.replaceAll('|KEYWORD|', keyword);
+            result = result.replaceAll('|KEYWORD2|', keyword2);
             result = result.replaceAll('|TABLE_NAME|', tableName);
+            result = result.replaceAll('|ALIAS_UPPER|', aliasUpper);
+            result = result.replaceAll('|ALIAS_LOWER|', aliasLower);
             result = result.replaceAll('|ALIAS|', alias);
             result = result.replaceAll('|P_KEY|', pKey);
             result = result.replaceAll('|P_KEY_SNAKE|', toCamelCase(pKey));
             result = result.replaceAll('|DATA_NAME|', dataName);
+            result = result.replaceAll('|PATH|', path);
             result = result.replaceAll('|SELECT_COLUMNS|', selectColumns);
             result = result.replaceAll('|INSERT_COLUMNS|', insertColumns);
             result = result.replaceAll('|INSERT_COLUMNS2|', insertColumns2);
@@ -985,7 +1000,7 @@ extractTableData("");`);
             console.error('파일 읽기 오류:', e);
           };
 
-          reader.readAsText(mapperFile);
+          reader.readAsText(readFile);
         }
         else{
             alert('파일 먼저 선택');

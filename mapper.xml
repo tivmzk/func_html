@@ -5,8 +5,8 @@
 <!--  시스템 리스트 통계 sql -->
 	<sql id="select|KEYWORD|State">
 		SELECT COUNT(*) AS CNT
-		FROM   |TABLE_NAME| |ALIAS|
-		WHERE  |ALIAS|.SYS_ID = SM.SYS_ID  
+		FROM   |TABLE_NAME| |ALIAS_UPPER|
+		WHERE  |ALIAS_UPPER|.SYS_ID = SM.SYS_ID  
 	</sql>
 	
 	<!--  시스템 리스트 sql -->
@@ -154,13 +154,13 @@
 	<sql id="select|KEYWORD|Sql">
 		SELECT
 			|SELECT_COLUMNS|
-		FROM |TABLE_NAME| |ALIAS|
+		FROM |TABLE_NAME| |ALIAS_UPPER|
 	</sql>
 	
 	<sql id="select|KEYWORD|Where">
 		WHERE 1=1
-		AND |ALIAS|.SYS_ID = #{sysId}
-		ORDER BY |ALIAS|.|P_KEY| DESC
+		AND |ALIAS_UPPER|.SYS_ID = #{sysId}
+		ORDER BY |ALIAS_UPPER|.|P_KEY| DESC
 	</sql>
 	
 	<!-- |DATA_NAME| 리스트 조회 쿼리 -->
@@ -202,7 +202,7 @@
 	<!-- |DATA_NAME| 단건 조회 -->
 	<select id="select|KEYWORD|Info" parameterType="map" resultType="egovMap">
 		<include refid="select|KEYWORD|Sql"></include>
-		WHERE |ALIAS|.|P_KEY| = #{|P_KEY_SNAKE|}
+		WHERE |ALIAS_UPPER|.|P_KEY| = #{|P_KEY_SNAKE|}
 	</select>
 	
 	<!-- |DATA_NAME| 등록 -->
