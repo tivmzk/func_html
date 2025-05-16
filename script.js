@@ -1007,6 +1007,22 @@ extractTableData("");`);
         }
     });
 
+    // URL에서 파라미터 추출
+    $('#btnFunc22').click(function(){
+        const urls = $('#taFunc22').val();
+        let result = [];
+        let keys = $('#inFunc22').val().split(',');
+        for(var url of urls.split('\n')){
+            const params = new URLSearchParams(url.split('?')[1]);
+            const temp = [];
+            for(const key of keys){
+                temp.push(params.get(key));
+            }
+            result.push(temp.join('\t'));
+        }
+        copy(result.join('\n'));
+    });
+
     // 버튼 클릭 시 팝업 출력
     $('button').click(function () {
         showPopup();
