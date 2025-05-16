@@ -1023,6 +1023,52 @@ extractTableData("");`);
         copy(result.join('\n'));
     });
 
+    // 엑셀 텍스트 포함 여부 확인
+    $('#btnFunc23').click(function(){
+        copy(`Sub HighlightCellsBasedOnList()
+    Dim list1Range As Range
+    Dim list2Range As Range
+    Dim cell As Range
+    Dim compareCell As Range
+    Dim found As Boolean
+    
+    ' 두 목록의 범위 설정 (필요에 따라 변경)
+    Set list1Range = Range("A1:A100")  ' 1번 목록 범위 (필요에 따라 변경)
+    Set list2Range = Range("B1:B20")   ' 2번 목록 범위 (필요에 따라 변경)
+    
+    Application.ScreenUpdating = False  ' 처리 속도 향상을 위해 화면 업데이트 비활성화
+    
+    ' 1번 목록의 각 셀에 대해
+    For Each cell In list1Range
+        found = False
+        
+        ' 셀이 비어있지 않은 경우에만 검사
+        If Not IsEmpty(cell.Value) Then
+            ' 2번 목록의 각 항목과 비교
+            For Each compareCell In list2Range
+                ' 2번 목록의 셀이 비어있지 않은 경우에만 검사
+                If Not IsEmpty(compareCell.Value) Then
+                    ' 1번 목록 셀에 2번 목록의 문자열이 포함되어 있는지 확인
+                    If InStr(1, cell.Value, compareCell.Value, vbTextCompare) > 0 Then
+                        cell.Interior.Color = RGB(255, 255, 0)  ' 노란색으로 변경
+                        found = True
+                        Exit For  ' 일치하는 항목을 찾으면 더 이상 비교하지 않음
+                    End If
+                End If
+            Next compareCell
+            
+            ' 일치하는 항목이 없으면 셀 색상 제거 (선택적)
+            If Not found Then
+                cell.Interior.ColorIndex = xlNone
+            End If
+        End If
+    Next cell
+    
+    Application.ScreenUpdating = True  ' 화면 업데이트 다시 활성화
+    MsgBox "완료되었습니다!", vbInformation
+End Sub`);
+    });
+
     // 버튼 클릭 시 팝업 출력
     $('button').click(function () {
         showPopup();
