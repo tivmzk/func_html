@@ -354,6 +354,7 @@
         // 문자 수정
         function replaceText(str) {
             return str.replaceAll('<br>', '\n')
+                        .replaceAll('<br />', '\n')
                         .replaceAll('&amp;', '&')
                         .replaceAll('&lt;', '<')
                         .replaceAll('&gt;', '>')
