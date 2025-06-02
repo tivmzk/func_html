@@ -79,7 +79,7 @@
         /* textarea 스타일 추가 (편집 화면용) */
         .tbl_st textarea {
             width: 100%;
-            height: 100%;
+            min-height: 100px;
             box-sizing: border-box;
             border: none;
             padding: 0;
@@ -128,6 +128,7 @@
         <button type="button" onclick="addCol()">열 추가</button>
         <button type="button" onclick="removeCol()">열 제거</button>
         <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button>
+        <button type="button" onclick="inputAll()">데이터 일괄 입력</button>
     </div>
     <div>
         <h4 class="tit2">
@@ -158,6 +159,9 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    <div>
+        <textarea id="allTextarea" placeholder="데이터 일괄 입력 html"></textarea>
     </div>
 
     <script>
@@ -320,10 +324,52 @@
             copy(htmlToCopy);
         }
 
+        // 일괄 입력
+        function inputAll() {
+            const data = document.getElementById('allTextarea').value;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'text/html');
+            const parseData = doc.body.firstElementChild;
+
+            document.querySelector('#tableTitle').value = parseData.querySelector('.tit2').innerText;
+
+            const dataTh = parseData.querySelectorAll('table thead tr th:nth-child(n+2)');
+            dataTh.forEach((v, i) => {
+               document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v.innerText;
+            });
+            const dataTd1 = parseData.querySelectorAll('table tbody tr:nth-child(1) td:nth-child(n+2)');
+            dataTd1.forEach((v, i) => {
+               document.querySelector(`#mealTable tbody tr:nth-child(1) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
+            });
+            const dataTd2 = parseData.querySelectorAll('table tbody tr:nth-child(2) td:nth-child(n+2)');
+            dataTd2.forEach((v, i) => {
+               document.querySelector(`#mealTable tbody tr:nth-child(2) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
+            });
+            const dataTd3 = parseData.querySelectorAll('table tbody tr:nth-child(3) td:nth-child(n+2)');
+            dataTd3.forEach((v, i) => {
+               document.querySelector(`#mealTable tbody tr:nth-child(3) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
+            });
+        }
+
+        // 문자 수정
+        function replaceText(str) {
+            return str.replaceAll('<br>', '\n')
+                        .replaceAll('&amp;', '&')
+                        .replaceAll('&lt;', '<')
+                        .replaceAll('&gt;', '>')
+                        .replaceAll('&nbsp;', ' ')
+                        .replaceAll('&quot;', '"')
+                        .replaceAll('&apos;', "'");
+        }
+
         // 페이지 로드 후 기본 날짜 열 추가 (선택 사항)
-        // window.onload = function() {
-        //     addCol(); // 예시로 페이지 로드 시 한 개의 날짜 열 추가
-        // };
+        window.onload = function() {
+            addCol(); // 예시로 페이지 로드 시 한 개의 날짜 열 추가
+            addCol();
+            addCol();
+            addCol();
+            addCol();
+        };
     </script>
 </body>
 
