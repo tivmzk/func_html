@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대전대 식단 생성기</title>
+    <style>
+        /* 기존 스타일 유지 */
+        .tbl_st {
+            position: relative;
+            width: 100%;
+            margin: 5px 0 0 -1px;
+            font-size: 14px;
+            text-align: center;
+            border-top: 1px solid #b7b7b7;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tbl_st thead th {
+            padding: 13px 8px;
+            vertical-align: middle;
+            color: #222;
+            font-family: "NotoM";
+            font-weight: normal;
+            border-bottom: 1px solid #c7c7c7;
+            border-left: 1px solid #c7c7c7;
+            background: #e2e5e9;
+        }
+
+        .tbl_st tbody th {
+            padding: 13px 8px;
+            vertical-align: middle;
+            color: #222;
+            font-family: "NotoM";
+            font-weight: normal;
+            border-bottom: 1px solid #c7c7c7;
+            border-left: 1px solid #c7c7c7;
+            background: #f7f7f7;
+        }
+
+        .tbl_st td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #c7c7c7;
+            border-left: 1px solid #c7c7c7;
+        }
+
+        .tbl_st tfoot th {
+            padding: 13px 8px;
+            color: #222;
+            font-family: "NotoM";
+            font-weight: normal;
+            border-bottom: 1px solid #c7c7c7;
+            border-left: 1px solid #c7c7c7;
+            background: #f7f7f7;
+        }
+
+        .tbl_st tfoot td {
+            padding: 13px 8px;
+            vertical-align: middle;
+            border-bottom: 1px solid #c7c7c7;
+            border-left: 1px solid #c7c7c7;
+            background: #f7f7f7;
+        }
+
+        .tbl_st:after {
+            content: "";
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            clear: both;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        /* textarea 스타일 추가 (편집 화면용) */
+        .tbl_st textarea {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            border: none;
+            padding: 0;
+            margin: 0;
+            resize: none;
+            font-size: 14px;
+            font-family: inherit;
+            vertical-align: top;
+        }
+
+        /* 입력 필드 스타일 (편집 화면용) */
+        .tbl_st input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        /* 제목 입력 필드 스타일 (편집 화면용) */
+        #tableTitle {
+            width: auto;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 버튼 간격 */
+        button {
+            margin-right: 5px;
+        }
+
+        /* 복사할 HTML에 인라인 스타일로 적용될 규칙 (참고용) */
+        /* th { font-weight: bold; } */
+        /* tr { height: 150px; } */
+        /* col:first-child { width: 80px; } */
+        /* col:not(:first-child) { width: auto; } */
+    </style>
+</head>
+
+<body>
+    <div>
+        <button type="button" onclick="addCol()">열 추가</button>
+        <button type="button" onclick="removeCol()">열 제거</button>
+        <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button>
+    </div>
+    <div>
+        <h4 class="tit2">
+            <input type="text" id="tableTitle" placeholder="예)혜화문화관">
+        </h4>
+        <div class="tbl_st scroll_gr mgt10">
+            <table id="mealTable">
+                <caption></caption>
+                <thead>
+                    <tr id="hdTr">
+                        <th>구분</th>
+                        <!-- 날짜 열은 JavaScript로 추가됩니다 -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>조식</th>
+                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                    </tr>
+                    <tr>
+                        <th>중식<br>[Extras Bar]</th>
+                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                    </tr>
+                    <tr>
+                        <th>석식</th>
+                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 열 추가 함수
+        function addCol() {
+            const headRow = document.querySelector('#hdTr');
+            const bodyRows = document.querySelectorAll('#mealTable tbody tr');
+            if(headRow.children.length > 5){
+                alert('열은 5개까지만 추가 가능합니다.')
+                return;
+            } 
+
+            // 헤더에 날짜 입력 필드가 있는 th 추가
+            const newHeaderTh = document.createElement('th');
+            const dateInput = document.createElement('input');
+            dateInput.type = 'text';
+            dateInput.placeholder = '날짜 입력';
+            newHeaderTh.appendChild(dateInput);
+            headRow.appendChild(newHeaderTh);
+
+            // 각 바디 행에 식단 내용 입력 textarea가 있는 td 추가
+            bodyRows.forEach(row => {
+                const newBodyTd = document.createElement('td');
+                const mealTextarea = document.createElement('textarea');
+                mealTextarea.placeholder = '식단 내용 입력\n(줄바꿈은 엔터)';
+                newBodyTd.appendChild(mealTextarea);
+                row.appendChild(newBodyTd);
+            });
+        }
+
+        // 열 제거 함수
+        function removeCol() {
+            const headRow = document.querySelector('#hdTr');
+            const bodyRows = document.querySelectorAll('#mealTable tbody tr');
+
+            // 첫 번째 '구분' 열을 제외하고 열이 있는지 확인
+            if (headRow.children.length > 1) {
+                // 헤더의 마지막 열 제거
+                headRow.removeChild(headRow.lastChild);
+
+                // 각 바디 행의 마지막 열 제거
+                bodyRows.forEach(row => {
+                    if (row.children.length > 1) { // 첫 번째 th 제외
+                        row.removeChild(row.lastChild);
+                    }
+                });
+            } else {
+                alert('더 이상 열을 제거할 수 없습니다.');
+            }
+        }
+
+        // 텍스트를 클립보드에 복사하는 헬퍼 함수
+        function copy(text) {
+            var textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            alert('HTML 코드가 클립보드에 복사되었습니다!');
+        }
+
+        // 테이블의 현재 상태를 읽어 HTML 코드를 생성하고 복사하는 함수
+        function copyTableHTML() {
+            const tableTitle = document.getElementById('tableTitle').value || '제목 없음';
+            const mealTable = document.getElementById('mealTable');
+
+            // 새로운 div와 table 요소 생성
+            const outputDiv = document.createElement('div');
+            const outputTitle = document.createElement('h4');
+            outputTitle.className = 'tit2'; // 기존 클래스 유지
+            outputTitle.textContent = tableTitle; // 제목 적용
+            outputDiv.appendChild(outputTitle);
+
+            const outputTableWrapper = document.createElement('div');
+            outputTableWrapper.className = 'tbl_st scroll_gr mgt10'; // 기존 클래스 유지
+
+            const outputTable = document.createElement('table');
+            outputTable.appendChild(document.createElement('caption')); // caption 빈 값으로 유지
+
+            // colgroup 및 col 요소 생성 및 추가
+            const outputColgroup = document.createElement('colgroup');
+            const numberOfCols = mealTable.querySelector('#hdTr').children.length; // 현재 테이블의 열 개수 파악
+
+            for (let i = 0; i < numberOfCols; i++) {
+                const outputCol = document.createElement('col');
+                if (i === 0) {
+                    outputCol.style.width = '20%'; // 첫 번째 열 (구분) 너비 고정
+                } else {
+                    // outputCol.style.width = 'auto'; // 나머지 열 너비 자동 분배
+                    outputCol.style.width = (80 / (numberOfCols-1)) + '%';
+                }
+
+                
+                outputColgroup.appendChild(outputCol);
+            }
+            outputTable.appendChild(outputColgroup); // table의 첫 번째 자식으로 colgroup 추가
+
+            // createTHead()와 createTBody() 메서드를 사용하여 테이블 섹션 생성 (에러 방지)
+            const outputThead = outputTable.createTHead();
+            const outputTbody = outputTable.createTBody();
+
+            const outputHeaderRow = document.createElement('tr');
+            outputThead.appendChild(outputHeaderRow);
+
+            // 헤더 복사 (날짜 포함) - font-weight: bold; 만 인라인 스타일로 추가
+            const originalHeaderCells = mealTable.querySelectorAll('#hdTr th');
+            originalHeaderCells.forEach((cell, index) => {
+                const newTh = document.createElement('th');
+                newTh.style.fontWeight = 'bold'; // th에 font-weight: bold; 인라인 스타일 적용
+
+                // 첫 번째 셀 ('구분')은 그대로 복사
+                if (index === 0) {
+                    newTh.innerHTML = cell.innerHTML; // '구분' 텍스트 복사
+                } else {
+                    // 날짜 입력 필드의 값을 읽어와 텍스트로 추가
+                    const inputElement = cell.querySelector('input[type="text"]');
+                    newTh.textContent = inputElement ? inputElement.value : '';
+                }
+                outputHeaderRow.appendChild(newTh);
+            });
+
+            // 바디 복사 (식단 내용 포함) - tr의 height: 150px; 만 인라인 스타일로 추가
+            const originalBodyRows = mealTable.querySelectorAll('tbody tr');
+            originalBodyRows.forEach(row => {
+                const newTr = document.createElement('tr');
+                newTr.style.height = '150px'; // tr의 height만 인라인 스타일로 유지
+
+                const originalCells = row.querySelectorAll('th, td');
+                originalCells.forEach((cell, index) => {
+                    if (index === 0) {
+                        // 첫 번째 셀 (예: 조식, 중식)은 th로 그대로 복사
+                        const newTh = document.createElement('th');
+                        newTh.innerHTML = cell.innerHTML; // 텍스트 복사
+                        newTr.appendChild(newTh);
+                    } else {
+                        // 나머지 셀 (식단 내용)은 td로 복사
+                        const newTd = document.createElement('td');
+                        const textareaElement = cell.querySelector('textarea');
+                        // textarea의 값을 읽어와 <br>로 줄바꿈하여 innerHTML로 추가
+                        if (textareaElement) {
+                            newTd.innerHTML = textareaElement.value.replace(/\n/g, '<br>');
+                        } else {
+                            newTd.innerHTML = '-'; // 내용이 없으면 '-' 표시 (원하는 대로 수정 가능)
+                        }
+                        newTr.appendChild(newTd);
+                    }
+                });
+                outputTbody.appendChild(newTr); // 생성된 tr을 outputTbody에 추가
+            });
+
+            // 생성된 table을 wrapper에 추가
+            outputTableWrapper.appendChild(outputTable);
+            outputDiv.appendChild(outputTableWrapper);
+
+            // 생성된 HTML 요소의 내부 HTML 코드를 가져옴
+            const htmlToCopy = outputDiv.outerHTML;
+
+            // 복사 함수 호출
+            copy(htmlToCopy);
+        }
+
+        // 페이지 로드 후 기본 날짜 열 추가 (선택 사항)
+        // window.onload = function() {
+        //     addCol(); // 예시로 페이지 로드 시 한 개의 날짜 열 추가
+        // };
+    </script>
+</body>
+
+</html>
