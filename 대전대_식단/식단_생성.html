@@ -129,6 +129,10 @@
         <button type="button" onclick="removeCol()">열 제거</button>
         <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button>
         <button type="button" onclick="inputAll()">데이터 일괄 입력</button>
+        <button type="button" onclick="removeSpace()">빈칸, - 제거</button>
+        <button type="button" onclick="allClear()">클리어</button>
+        <button type="button" onclick="inputDate()">이번주 날짜 자동입력</button>
+        <button type="button" onclick="inputNextDate()">다음주 날짜 자동입력</button>
     </div>
     <div>
         <h4 class="tit2">
@@ -361,6 +365,103 @@
                         .replaceAll('&nbsp;', ' ')
                         .replaceAll('&quot;', '"')
                         .replaceAll('&apos;', "'");
+        }
+
+        // 빈칸, - 제거
+        function removeSpace(){
+            const mealTable = document.querySelector('#mealTable');
+            const originalBodyRows = mealTable.querySelectorAll('tbody tr');
+            originalBodyRows.forEach(row => {
+                const originalCells = row.querySelectorAll('td');
+                originalCells.forEach((cell, index) => {
+                    const textareaElement = cell.querySelector('textarea');
+                    textareaElement.value = textareaElement.value.split('\n').filter((v)=>v.replace(/[0\-]/g, '') != '').join('\n');
+                });
+            });
+        }
+
+        // 전부 제거
+        function allClear(){
+            const mealTable = document.querySelector('#mealTable');
+            const originalBodyRows = mealTable.querySelectorAll('tbody tr');
+            originalBodyRows.forEach(row => {
+                const originalCells = row.querySelectorAll('td');
+                originalCells.forEach((cell, index) => {
+                    const textareaElement = cell.querySelector('textarea');
+                    textareaElement.value = '';
+                });
+            });
+        }
+
+        // 날짜를 'YYYY.MM.DD.' 형식으로 포맷하는 헬퍼 함수입니다.
+        function formatAsYYYYMMDD_Dot(date) {
+            const year = date.getFullYear(); // 연도를 가져옵니다.
+            // 월은 0부터 시작하므로 1을 더하고, 두 자리로 맞추기 위해 padStart를 사용합니다.
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            // 일자를 가져오고, 두 자리로 맞추기 위해 padStart를 사용합니다.
+            const day = date.getDate().toString().padStart(2, '0');
+
+            return `${year}.${month}.${day}.`; // 'YYYY.MM.DD.' 형식의 문자열을 반환합니다. [[8]](https://ji-u.tistory.com/7), [[9]](https://sweets1327.tistory.com/63)
+        }
+
+        // 이번 주 월요일부터 금요일까지의 날짜를 구하는 함수입니다.
+        function getWeekdayDates(nextWeekAt) {
+            const today = new Date(); // 현재 날짜와 시간을 가져옵니다.
+            const currentDay = today.getDay(); // 현재 요일을 가져옵니다 (0: 일요일, 1: 월요일, ..., 6: 토요일). [[9]](https://sweets1327.tistory.com/63)
+
+            // 이번 주 월요일 날짜를 계산합니다.
+            // Date.setDate() 메서드를 사용하면 날짜를 더하거나 뺄 수 있습니다. [[1]](https://blog.naver.com/sonyalpha1004/222217844918?viewType=pc), [[2]](https://spprince.tistory.com/699)
+            // 오늘 요일(currentDay)에서 월요일(1)까지 차이나는 일수만큼 오늘 날짜에서 빼줍니다.
+            // getDay()가 일요일(0)부터 시작하므로, 계산 편의상 (currentDay + 6) % 7 만큼 빼주면 됩니다.
+            // 예: 오늘이 수요일(3)이면 (3+6)%7=2, 즉 2일 전이 월요일.
+            // 예: 오늘이 일요일(0)이면 (0+6)%7=6, 즉 6일 전이 월요일.
+            const daysToSubtract = (currentDay + 6) % 7;
+            // 다음주 월요일
+            let daysToAdd = (1 - currentDay + 7) % 7;
+            if (daysToAdd === 0) {
+                daysToAdd = 7;
+            }
+
+            const mondayDate = new Date(today); // 현재 날짜를 복사합니다.
+            if(nextWeekAt){
+                mondayDate.setDate(today.getDate() + daysToAdd); // 복사한 날짜를 이번 주 월요일로 설정합니다.
+            }
+            else{
+                mondayDate.setDate(today.getDate() - daysToSubtract); // 복사한 날짜를 이번 주 월요일로 설정합니다.
+            }
+
+            const weekdays = []; // 월요일부터 금요일까지의 날짜를 저장할 배열입니다.
+            const currentDate = new Date(mondayDate); // 월요일 날짜부터 시작합니다.
+
+            // 월요일부터 금요일까지 총 5일이므로 5번 반복합니다.
+            for (let i = 0; i < 5; i++) {
+                // 현재 날짜를 원하는 형식으로 포맷하여 배열에 추가합니다.
+                weekdays.push(formatAsYYYYMMDD_Dot(currentDate));
+                // 다음 날짜로 이동합니다.
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            return weekdays; // 결과 배열을 반환합니다.
+        }
+
+        // 날짜 자동입력
+        function inputDate(){
+            const hdTr = document.querySelector('#hdTr');
+            const weekDates = getWeekdayDates();
+
+            weekDates.forEach((v, i) => {
+                document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v;
+            });
+        }
+
+        // 다음주 날짜 자동입력
+        function inputNextDate(){
+            const hdTr = document.querySelector('#hdTr');
+            const weekDates = getWeekdayDates(true);
+
+            weekDates.forEach((v, i) => {
+                document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v;
+            });
         }
 
         // 페이지 로드 후 기본 날짜 열 추가 (선택 사항)
