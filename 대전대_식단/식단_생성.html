@@ -128,7 +128,8 @@
         <button type="button" onclick="addCol()">열 추가</button>
         <button type="button" onclick="removeCol()">열 제거</button>
         <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button>
-        <button type="button" onclick="inputAll()">데이터 일괄 입력</button>
+        <button type="button" onclick="inputHtmlAll()">html로 데이터 일괄 입력</button>
+        <button type="button" onclick="inputExcelAll()">엑셀로 데이터 일괄 입력</button>
         <button type="button" onclick="removeSpace()">빈칸, - 제거</button>
         <button type="button" onclick="allClear()">클리어</button>
         <button type="button" onclick="inputDate()">이번주 날짜 자동입력</button>
@@ -165,7 +166,12 @@
         </div>
     </div>
     <div>
-        <textarea id="allTextarea" placeholder="데이터 일괄 입력 html"></textarea>
+        <textarea id="allTextarea" placeholder="데이터 일괄 입력"></textarea>
+        <select id="allSelect">
+            <option value="조식">조식</option>
+            <option value="중식">중식</option>
+            <option value="석식">석식</option>
+        </select>
     </div>
 
     <script>
@@ -328,8 +334,8 @@
             copy(htmlToCopy);
         }
 
-        // 일괄 입력
-        function inputAll() {
+        // Html 일괄 입력
+        function inputHtmlAll() {
             const data = document.getElementById('allTextarea').value;
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, 'text/html');
@@ -352,6 +358,49 @@
             const dataTd3 = parseData.querySelectorAll('table tbody tr:nth-child(3) td:nth-child(n+2)');
             dataTd3.forEach((v, i) => {
                document.querySelector(`#mealTable tbody tr:nth-child(3) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
+            });
+        }
+
+        // Excel 일괄 입력
+        function inputExcelAll() {
+            const data = document.getElementById('allTextarea').value.trim();
+            const type = document.getElementById('allSelect').value;
+
+            const splitData = [];
+            let dataTd = null;
+            let max = 0;
+            data.split('\n').forEach(v => {
+               const arr = v.split('\t');
+               splitData.push(arr);
+               max = max < arr.length ? arr.length : max;
+            });
+
+            if(type == '조식'){
+                dataTd = document.querySelectorAll('table tbody tr:nth-child(1) td:nth-child(n+2)');
+            }
+            else if(type == '중식'){
+                dataTd = document.querySelectorAll('table tbody tr:nth-child(2) td:nth-child(n+2)');
+            }
+            else if(type == '석식'){
+                dataTd = document.querySelectorAll('table tbody tr:nth-child(3) td:nth-child(n+2)');
+            }
+            else{
+                alert('잘못된 값');
+                return;
+            }
+
+            const realArr = [];
+
+            for(let i = 0; i < max; i++){
+                const arr = [];
+                for(let j = 0; j < splitData.length; j++){
+                    arr.push(splitData[j][i]);
+                }
+                realArr.push(arr);
+            }
+
+            dataTd.forEach((v, i) => {
+               v.querySelector('textarea').value = replaceText(realArr[i].join('\n'));
             });
         }
 
