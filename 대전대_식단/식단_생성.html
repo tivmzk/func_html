@@ -127,11 +127,11 @@
     <div>
         <button type="button" onclick="addCol()">열 추가</button>
         <button type="button" onclick="removeCol()">열 제거</button>
-        <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button>
+        <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button><br>
         <button type="button" onclick="inputHtmlAll()">html로 데이터 일괄 입력</button>
-        <button type="button" onclick="inputExcelAll()">엑셀로 데이터 일괄 입력</button>
-        <button type="button" onclick="removeSpace()">빈칸, - 제거</button>
-        <button type="button" onclick="allClear()">클리어</button>
+        <button type="button" onclick="inputExcelAll()">엑셀로 데이터 일괄 입력</button><br>
+        <button type="button" onclick="removeSpace()">빈칸 제거</button>
+        <button type="button" onclick="allClear()">클리어</button><br>
         <button type="button" onclick="inputDate()">이번주 날짜 자동입력</button>
         <button type="button" onclick="inputNextDate()">다음주 날짜 자동입력</button>
     </div>
@@ -424,7 +424,7 @@
                 const originalCells = row.querySelectorAll('td');
                 originalCells.forEach((cell, index) => {
                     const textareaElement = cell.querySelector('textarea');
-                    textareaElement.value = textareaElement.value.split('\n').filter((v)=>v.replace(/[0\-]/g, '') != '').join('\n');
+                    textareaElement.value = textareaElement.value.split('\n').filter((v)=>v.replace(/[0\-X]/g, '') != '').join('\n');
                 });
             });
         }
