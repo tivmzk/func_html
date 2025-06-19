@@ -250,7 +250,9 @@
             outputTableWrapper.className = 'tbl_st scroll_gr mgt10'; // 기존 클래스 유지
 
             const outputTable = document.createElement('table');
-            outputTable.appendChild(document.createElement('caption')); // caption 빈 값으로 유지
+            const caption = document.createElement('caption');
+            caption.textContent = tableTitle + ' 식단 내용';
+            outputTable.appendChild(caption);
 
             // colgroup 및 col 요소 생성 및 추가
             const outputColgroup = document.createElement('colgroup');
