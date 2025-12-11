@@ -34,7 +34,7 @@ public class |ALIAS||KEYWORD|Controller {
 	 */
 	@SuppressWarnings("unchecked")
 	@RequestMapping("/apple/|ALIAS_LOWER|/|KEYWORD2|/select|KEYWORD|SmList.do")
-	public String select|KEYWORD|SmList(HttpServletRequest request, ModelMap model, CommonMap commonMap) {
+	public String select|KEYWORD|SmList(HttpServletRequest request, HttpServletResponse response, ModelMap model, CommonMap commonMap) {
 		
 		// 관리 홈페이지 시스템 정보 호출
 		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
@@ -58,6 +58,9 @@ public class |ALIAS||KEYWORD|Controller {
 
 		// 시스템 리스트 조회
 		Map userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
+		if(userInfo == null){
+			return CommonUtil.alertException(response, "로그인이 필요합니다.");
+		}
 
 		try {
 
@@ -98,7 +101,9 @@ public class |ALIAS||KEYWORD|Controller {
 	public String select|KEYWORD|List(HttpServletRequest request, HttpServletResponse response, ModelMap model, CommonMap commonMap) {
 		//사용자 정보 호출
 		Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+		if(userInfo == null){
+			return CommonUtil.alertException(response, "로그인이 필요합니다.");
+		}
 		//관리 시스템 리스트 호출
 		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -108,9 +113,9 @@ public class |ALIAS||KEYWORD|Controller {
 		String sysId = "";
 
 		if (commonMap.get("sysId") != null) {
-			sysId = commonMap.get("sysId").toString();
+			sysId = Objects.toString(commonMap.get("sysId"), "");
 		} else {
-			sysId = SSmanageSysInfo.get("sysId").toString();
+			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 		}
 
 		//시스템 아이디 설정
@@ -151,7 +156,9 @@ public class |ALIAS||KEYWORD|Controller {
 	public String select|KEYWORD|Info(HttpServletRequest request, HttpServletResponse response, ModelMap model, CommonMap commonMap) {
 		//사용자 정보 호출
 		Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+		if(userInfo == null){
+			return CommonUtil.alertException(response, "로그인이 필요합니다.");
+		}
 		//관리 시스템 리스트 호출
 		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -161,9 +168,9 @@ public class |ALIAS||KEYWORD|Controller {
 		String sysId = "";
 
 		if (commonMap.get("sysId") != null) {
-			sysId = commonMap.get("sysId").toString();
+			sysId = Objects.toString(commonMap.get("sysId"), "");
 		} else {
-			sysId = SSmanageSysInfo.get("sysId").toString();
+			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 		}
 
 		//시스템 아이디 설정
@@ -199,7 +206,9 @@ public class |ALIAS||KEYWORD|Controller {
 	public String insert|KEYWORD|InfoPage(HttpServletRequest request, HttpServletResponse response, ModelMap model, CommonMap commonMap) {
 		//사용자 정보 호출
 		Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+		if(userInfo == null){
+			return CommonUtil.alertException(response, "로그인이 필요합니다.");
+		}
 		//관리 시스템 리스트 호출
 		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -209,9 +218,9 @@ public class |ALIAS||KEYWORD|Controller {
 		String sysId = "";
 
 		if (commonMap.get("sysId") != null) {
-			sysId = commonMap.get("sysId").toString();
+			sysId = Objects.toString(commonMap.get("sysId"), "");
 		} else {
-			sysId = SSmanageSysInfo.get("sysId").toString();
+			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 		}
 
 		//시스템 아이디 설정
@@ -245,7 +254,10 @@ public class |ALIAS||KEYWORD|Controller {
 		try {
 			//사용자 정보 호출
 			Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+			if(userInfo == null){
+				resultMap.put("resultAt", "A");
+				return;
+			}
 			//관리 시스템 리스트 호출
 			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -255,9 +267,9 @@ public class |ALIAS||KEYWORD|Controller {
 			String sysId = "";
 
 			if (commonMap.get("sysId") != null) {
-				sysId = commonMap.get("sysId").toString();
+				sysId = Objects.toString(commonMap.get("sysId"), "");
 			} else {
-				sysId = SSmanageSysInfo.get("sysId").toString();
+				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 			}
 
 			//시스템 아이디 설정
@@ -309,7 +321,9 @@ public class |ALIAS||KEYWORD|Controller {
 	public String update|KEYWORD|InfoPage(HttpServletRequest request, HttpServletResponse response, ModelMap model, CommonMap commonMap) {
 		//사용자 정보 호출
 		Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+		if(userInfo == null){
+			return CommonUtil.alertException(response, "로그인이 필요합니다.");
+		}
 		//관리 시스템 리스트 호출
 		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -319,9 +333,9 @@ public class |ALIAS||KEYWORD|Controller {
 		String sysId = "";
 
 		if (commonMap.get("sysId") != null) {
-			sysId = commonMap.get("sysId").toString();
+			sysId = Objects.toString(commonMap.get("sysId"), "");
 		} else {
-			sysId = SSmanageSysInfo.get("sysId").toString();
+			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 		}
 
 		//시스템 아이디 설정
@@ -358,7 +372,10 @@ public class |ALIAS||KEYWORD|Controller {
 		try {
 			//사용자 정보 호출
 			Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+			if(userInfo == null){
+				resultMap.put("resultAt", "A");
+				return;
+			}
 			//관리 시스템 리스트 호출
 			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -368,9 +385,9 @@ public class |ALIAS||KEYWORD|Controller {
 			String sysId = "";
 
 			if (commonMap.get("sysId") != null) {
-				sysId = commonMap.get("sysId").toString();
+				sysId = Objects.toString(commonMap.get("sysId"), "");
 			} else {
-				sysId = SSmanageSysInfo.get("sysId").toString();
+				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 			}
 
 			//시스템 아이디 설정
@@ -423,7 +440,10 @@ public class |ALIAS||KEYWORD|Controller {
 		try {
 			//사용자 정보 호출
 			Map<String, Object> userInfo = SystemSessionInfo.getSessionUserInfo(request, "apple");
-
+			if(userInfo == null){
+				resultMap.put("resultAt", "A");
+				return;
+			}
 			//관리 시스템 리스트 호출
 			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
 
@@ -433,9 +453,9 @@ public class |ALIAS||KEYWORD|Controller {
 			String sysId = "";
 
 			if (commonMap.get("sysId") != null) {
-				sysId = commonMap.get("sysId").toString();
+				sysId = Objects.toString(commonMap.get("sysId"), "");
 			} else {
-				sysId = SSmanageSysInfo.get("sysId").toString();
+				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
 			}
 
 			//시스템 아이디 설정
