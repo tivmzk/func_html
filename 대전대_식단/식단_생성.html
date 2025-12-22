@@ -125,8 +125,8 @@
 
 <body>
     <div>
-        <button type="button" onclick="addCol()">열 추가</button>
-        <button type="button" onclick="removeCol()">열 제거</button>
+        <!-- <button type="button" onclick="addCol()">열 추가</button>
+        <button type="button" onclick="removeCol()">열 제거</button> -->
         <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button><br>
         <button type="button" onclick="inputHtmlAll()">html로 데이터 일괄 입력</button>
         <button type="button" onclick="inputExcelAll()">엑셀로 데이터 일괄 입력</button><br>
@@ -146,20 +146,40 @@
                     <tr id="hdTr">
                         <th>구분</th>
                         <!-- 날짜 열은 JavaScript로 추가됩니다 -->
+                        <th><input type="text" placeholder="날짜 입력"></th>
+                        <th><input type="text" placeholder="날짜 입력"></th>
+                        <th><input type="text" placeholder="날짜 입력"></th>
+                        <th><input type="text" placeholder="날짜 입력"></th>
+                        <th><input type="text" placeholder="날짜 입력"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <th>조식</th>
                         <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
                     </tr>
                     <tr>
                         <th>중식<br>[Extras Bar]</th>
                         <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
                     </tr>
                     <tr>
                         <th>석식</th>
                         <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
                     </tr>
                 </tbody>
             </table>
@@ -426,7 +446,7 @@
                 const originalCells = row.querySelectorAll('td');
                 originalCells.forEach((cell, index) => {
                     const textareaElement = cell.querySelector('textarea');
-                    textareaElement.value = textareaElement.value.split('\n').filter((v)=>v.replace(/[0\-X]/g, '') != '').join('\n');
+                    textareaElement.value = textareaElement.value.split('\n').filter((v)=>v.replace(/[0\-X]/g, '') != '').map((v)=>v.trim()).join('\n');
                 });
             });
         }
@@ -515,13 +535,47 @@
             });
         }
 
-        // 페이지 로드 후 기본 날짜 열 추가 (선택 사항)
         window.onload = function() {
-            addCol(); // 예시로 페이지 로드 시 한 개의 날짜 열 추가
-            addCol();
-            addCol();
-            addCol();
-            addCol();
+            // 붙여넣기 하면 자동으로 입력
+            const tbody = document.getElementsByTagName('tbody')[0];
+            var text = '';
+            var pasteFlag = false;
+            tbody.addEventListener('paste', function(e){
+                if(e.target.localName == 'textarea'){
+                    text = e.clipboardData.getData('text');
+                    pasteFlag = true;
+                }
+            });
+            tbody.addEventListener('input', function(e){
+                if(pasteFlag){
+                    const textareas = e.target.closest('tr').querySelectorAll('textarea');
+                    const splitData = [];
+                    let max = 0;
+                    text.split('\n').forEach(v => {
+                        const arr = v.split('\t');
+                        splitData.push(arr);
+                        max = max < arr.length ? arr.length : max;
+                    });
+
+                    const realArr = [];
+
+                    for(let i = 0; i < max; i++){
+                        const arr = [];
+                        for(let j = 0; j < splitData.length; j++){
+                            arr.push(splitData[j][i]);
+                        }
+                        realArr.push(arr);
+                    }
+
+                    textareas.forEach((v, i) => {
+                        v.value = replaceText(realArr[i].join('\n'));
+                    });
+
+                    removeSpace();
+                    pasteFlag = false;
+                    text = '';
+                }
+            });
         };
     </script>
 </body>
