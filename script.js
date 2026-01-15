@@ -6,6 +6,22 @@ $(function () {
     document.querySelector('.popup').addEventListener('animationend', function() {
         this.classList.remove('show');
     });
+    // 검색 이벤트 추가
+    $('#srchTxt').keyup(function (e) {
+        var txt = $(this).val().toUpperCase().replaceAll(' ', '');
+        $('ul.list a').each((i, v) => {
+            if(txt == ''){
+                $(v).css('color', 'black');
+            }
+            else if($(v).text().includes(txt)){
+                $(v).css('color', 'red');
+            }
+            else{
+                $(v).css('color', 'black');
+            }
+        });
+    });
+
     // 목차 추가
     var li = '';
     $('[class^=section]').each((i, v) => {

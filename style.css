@@ -45,13 +45,25 @@ button {
 .list {
     position: fixed;
     right: 10px;
-    top: 0px;
+    top: 30px;
     border: black solid 1px;
     padding: 0 10px;
 }
 .list li{
     list-style: none;
 }
+
+.srchBox{
+    position: fixed;
+    right: 10px;
+    top: 0px;
+    padding: 5px;
+}
+.srchBox input{
+    height: 25px;
+    width: 390px;
+}
+
 
 .section4>div {
     display: flex;
