@@ -13,7 +13,7 @@ $(function () {
             if(txt == ''){
                 $(v).css('color', 'black');
             }
-            else if($(v).text().includes(txt)){
+            else if($(v).text().toUpperCase().includes(txt)){
                 $(v).css('color', 'red');
             }
             else{
