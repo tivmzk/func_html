@@ -551,6 +551,8 @@
                     const textareas = e.target.closest('tr').querySelectorAll('textarea');
                     const splitData = [];
                     let max = 0;
+                    const index = Array.prototype.indexOf.call(textareas, e.target);
+
                     text.split('\n').forEach(v => {
                         const arr = v.split('\t');
                         splitData.push(arr);
@@ -568,7 +570,9 @@
                     }
 
                     textareas.forEach((v, i) => {
-                        v.value = replaceText(realArr[i].join('\n'));
+                        if(realArr[i-index] != undefined && i >= index){
+                            v.value = replaceText(realArr[i-index].join('\n'));
+                        }
                     });
 
                     removeSpace();
