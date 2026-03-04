@@ -192,6 +192,7 @@
             <option value="중식">중식</option>
             <option value="석식">석식</option>
         </select>
+        <label for="pasteAt"><input type="checkbox" id="pasteAt">덮어쓰기 여부</label>
     </div>
 
     <script>
@@ -541,7 +542,8 @@
             var text = '';
             var pasteFlag = false;
             tbody.addEventListener('paste', function(e){
-                if(e.target.localName == 'textarea'){
+                const pasteAt = document.querySelector('#pasteAt').checked;
+                if(e.target.localName == 'textarea' && pasteAt){
                     text = e.clipboardData.getData('text');
                     pasteFlag = true;
                 }
