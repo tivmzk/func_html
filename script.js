@@ -10,14 +10,11 @@ $(function () {
     $('#srchTxt').keyup(function (e) {
         var txt = $(this).val().toUpperCase().replaceAll(' ', '');
         $('ul.list a').each((i, v) => {
-            if(txt == ''){
-                $(v).css('color', 'black');
-            }
-            else if($(v).text().toUpperCase().includes(txt)){
+            if($(v).text().toUpperCase().includes(txt) && txt != ''){
                 $(v).css('color', 'red');
             }
             else{
-                $(v).css('color', 'black');
+                $(v).css('color', '');
             }
         });
     });
@@ -106,6 +103,7 @@ $(function () {
         $('#resultFunc2').empty();
         $('#resultFunc2').append(s);
         $('#resultFunc2').focus();
+        showPopup();
     });
     // 스네이크 케이스 -> 캐멀 케이스
     $('#btnFunc3').click(function () {
@@ -606,6 +604,7 @@ extractTableData("");`);
         fn10_maxY = fn10_maxY < fn10_tb2ValArr[0].length ? fn10_tb2ValArr[0].length : fn10_maxY;
         fn10_maxX = fn10_tb1ValArr.length > fn10_tb2ValArr.length ? fn10_tb1ValArr.length : fn10_tb2ValArr.length;
         printFn10();
+        showPopup();
     });
     // 입력 감시해서 테이블 출력
     $('#tbFunc10_1, #tbFunc10_2').on('change', 'thead textarea', function () {
@@ -867,6 +866,7 @@ extractTableData("");`);
     // 목록 개수 구하기
     $('#btnFunc16').click(function () {
         $('#pFunc16').text($('#taFunc16').val().split('\n').length + '개');
+        showPopup();
     });
 
     // 앞에 붙은 숫자 채우기
@@ -1104,10 +1104,6 @@ End Sub`);
         copy(query);
     });
 
-    // 버튼 클릭 시 팝업 출력
-    $('button').click(function () {
-        showPopup();
-    });
     // HTML 태그 생성
     function getElem(teg, str, attr) {
         var tags = teg.split('|');
@@ -1149,6 +1145,7 @@ End Sub`);
         t.select();
         document.execCommand('copy');
         document.body.removeChild(t);
+        showPopup();
         return str;
     }
     // 문자열 반복

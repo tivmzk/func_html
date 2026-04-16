@@ -97,6 +97,10 @@ body {
     pointer-events: none;
 }
 
+.popup p {
+    margin-top: 0;
+}
+
 .popup.show {
     animation: fade-in-out 1.2s ease forwards;
 }
@@ -442,6 +446,7 @@ select:focus {
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     min-height: 40px;
+    flex-direction: column;
 }
 
 #resultFunc2 p {
