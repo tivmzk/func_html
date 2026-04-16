@@ -6,193 +6,521 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>대전대 식단 생성기</title>
     <style>
-        /* 기존 스타일 유지 */
-        .tbl_st {
-            position: relative;
-            width: 100%;
-            margin: 5px 0 0 -1px;
-            font-size: 14px;
-            text-align: center;
-            border-top: 1px solid #b7b7b7;
-            -webkit-overflow-scrolling: touch;
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
-        .tbl_st thead th {
-            padding: 13px 8px;
-            vertical-align: middle;
-            color: #222;
-            font-family: "NotoM";
-            font-weight: normal;
-            border-bottom: 1px solid #c7c7c7;
-            border-left: 1px solid #c7c7c7;
-            background: #e2e5e9;
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+            background: #eef3fa;
+            color: #2d3748;
+            min-height: 100vh;
+            padding: 28px 20px 48px;
         }
 
-        .tbl_st tbody th {
-            padding: 13px 8px;
-            vertical-align: middle;
-            color: #222;
-            font-family: "NotoM";
-            font-weight: normal;
-            border-bottom: 1px solid #c7c7c7;
-            border-left: 1px solid #c7c7c7;
-            background: #f7f7f7;
+        /* ===== Layout ===== */
+        .page-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .tbl_st td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #c7c7c7;
-            border-left: 1px solid #c7c7c7;
+        /* ===== Page Header ===== */
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-bottom: 4px;
         }
 
-        .tbl_st tfoot th {
-            padding: 13px 8px;
-            color: #222;
-            font-family: "NotoM";
-            font-weight: normal;
-            border-bottom: 1px solid #c7c7c7;
-            border-left: 1px solid #c7c7c7;
-            background: #f7f7f7;
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #6DAEDB, #4D8FAC);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(77,143,172,0.35);
         }
 
-        .tbl_st tfoot td {
-            padding: 13px 8px;
-            vertical-align: middle;
-            border-bottom: 1px solid #c7c7c7;
-            border-left: 1px solid #c7c7c7;
-            background: #f7f7f7;
+        .page-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            letter-spacing: -0.3px;
         }
 
-        .tbl_st:after {
-            content: "";
-            display: block;
-            position: absolute;
-            left: 0;
-            top: 0;
+        .page-header p {
+            font-size: 12.5px;
+            color: #8898aa;
+            margin-top: 3px;
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+            padding: 20px 24px;
+        }
+
+        .card-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #b0bec5;
+            margin-bottom: 14px;
+        }
+
+        /* ===== Toolbar ===== */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .toolbar-sep {
             width: 1px;
-            height: 100%;
-            clear: both;
-            overflow: hidden;
+            height: 26px;
+            background: #e8edf3;
+            margin: 0 2px;
+        }
+
+        /* ===== Buttons ===== */
+        button {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.13s ease, box-shadow 0.13s ease, opacity 0.13s ease;
+            font-family: inherit;
+            letter-spacing: -0.2px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(0,0,0,0.13);
+        }
+
+        button:active {
+            transform: translateY(0px);
+            opacity: 0.88;
+        }
+
+        .btn-copy {
+            background: linear-gradient(135deg, #667eea, #5a67d8);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(102,126,234,0.35);
+        }
+
+        .btn-input {
+            background: linear-gradient(135deg, #4BC0C8, #2eada6);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(43,173,166,0.28);
+        }
+
+        .btn-util {
+            background: linear-gradient(135deg, #f6ad55, #e89430);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(232,148,48,0.3);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #fc8181, #e53e3e);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(229,62,62,0.28);
+        }
+
+        .btn-date {
+            background: linear-gradient(135deg, #76e3a0, #38a169);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(56,161,105,0.3);
+        }
+
+        .btn-date2 {
+            background: linear-gradient(135deg, #68d7e2, #2c9dab);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(44,157,171,0.3);
+        }
+
+        /* ===== Title Row ===== */
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .title-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 6px 11px;
+            white-space: nowrap;
+        }
+
+        #tableTitle {
+            flex: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 9px 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+            font-family: inherit;
+            background: #fafcff;
+        }
+
+        #tableTitle:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.13);
+        }
+
+        #tableTitle::placeholder {
+            color: #c5cfe0;
+            font-weight: 400;
+        }
+
+        /* ===== Table Wrapper ===== */
+        .table-scroll {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1.5px solid #dce8f5;
+        }
+
+        /* ===== Table ===== */
+        .tbl_st {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: center;
+        }
+
+        /* Header row */
+        .tbl_st thead th {
+            padding: 13px 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .tbl_st thead th:first-child {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-right: 2px solid #c8e6c9;
+            width: 80px;
+        }
+
+        .tbl_st thead th:not(:first-child) {
+            background: linear-gradient(180deg, #e3f2fd, #daeaf8);
+            color: #1565c0;
+            border-left: 1px solid #bbdefb;
+            border-bottom: 2px solid #90caf9;
+        }
+
+        /* Body row header */
+        .tbl_st tbody th {
+            padding: 12px 10px;
+            background: #f1f8f2;
+            color: #276749;
+            font-weight: 700;
+            border-bottom: 1px solid #c8e6c9;
+            border-right: 2px solid #c8e6c9;
+            white-space: pre-line;
+            min-width: 72px;
+            font-size: 13px;
+        }
+
+        .tbl_st tbody tr:last-child th {
+            border-bottom: none;
+        }
+
+        /* Body cells */
+        .tbl_st td {
+            padding: 8px;
+            border-bottom: 1px solid #edf2f7;
+            border-left: 1px solid #edf2f7;
+            vertical-align: top;
             background: #fff;
         }
 
-        /* textarea 스타일 추가 (편집 화면용) */
-        .tbl_st textarea {
-            width: 100%;
-            min-height: 100px;
-            box-sizing: border-box;
-            border: none;
-            padding: 0;
-            margin: 0;
-            resize: none;
-            font-size: 14px;
-            font-family: inherit;
-            vertical-align: top;
+        .tbl_st tbody tr:last-child td {
+            border-bottom: none;
         }
 
-        /* 입력 필드 스타일 (편집 화면용) */
+        .tbl_st tbody tr:hover td {
+            background: #f8fbff;
+        }
+
+        /* ===== Inputs inside table ===== */
+        .tbl_st textarea {
+            width: 100%;
+            min-height: 112px;
+            box-sizing: border-box;
+            border: 1.5px solid transparent;
+            border-radius: 8px;
+            padding: 7px 9px;
+            resize: vertical;
+            font-size: 13px;
+            font-family: inherit;
+            vertical-align: top;
+            color: #2d3748;
+            background: transparent;
+            transition: border-color 0.15s, background 0.15s;
+            line-height: 1.65;
+        }
+
+        .tbl_st textarea:focus {
+            outline: none;
+            border-color: #90cdf4;
+            background: #ebf8ff;
+        }
+
+        .tbl_st textarea::placeholder {
+            color: #d1dce8;
+            font-size: 11.5px;
+        }
+
         .tbl_st input[type="text"] {
             width: 100%;
             box-sizing: border-box;
-            border: none;
-            padding: 0;
-            margin: 0;
-            font-size: 14px;
+            border: 1.5px solid transparent;
+            border-radius: 7px;
+            padding: 5px 6px;
+            font-size: 13px;
             font-family: inherit;
             text-align: center;
+            font-weight: 700;
+            color: #1565c0;
+            background: transparent;
+            transition: border-color 0.15s, background 0.15s;
         }
 
-        /* 제목 입력 필드 스타일 (편집 화면용) */
-        #tableTitle {
-            width: auto;
-            border: none;
-            font-size: 18px;
-            font-weight: bold;
+        .tbl_st input[type="text"]:focus {
+            outline: none;
+            border-color: #90cdf4;
+            background: #fff;
         }
 
-        /* 버튼 간격 */
-        button {
-            margin-right: 5px;
+        .tbl_st input[type="text"]::placeholder {
+            color: #90bde0;
+            font-size: 11.5px;
+            font-weight: 400;
         }
 
-        /* 복사할 HTML에 인라인 스타일로 적용될 규칙 (참고용) */
-        /* th { font-weight: bold; } */
-        /* tr { height: 150px; } */
-        /* col:first-child { width: 80px; } */
-        /* col:not(:first-child) { width: auto; } */
+        /* ===== Batch Input Section ===== */
+        .batch-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        #allTextarea {
+            flex: 1;
+            min-height: 96px;
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #2d3748;
+            resize: vertical;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            outline: none;
+            background: #fafcff;
+        }
+
+        #allTextarea:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+        }
+
+        #allTextarea::placeholder {
+            color: #c5cfe0;
+            font-size: 12.5px;
+        }
+
+        .batch-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        #allSelect {
+            width: 100%;
+            padding: 9px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 9px;
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 600;
+            color: #2d3748;
+            background: #fafcff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        #allSelect:focus {
+            border-color: #667eea;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            color: #718096;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 2px;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
     </style>
 </head>
 
 <body>
-    <div>
-        <!-- <button type="button" onclick="addCol()">열 추가</button>
-        <button type="button" onclick="removeCol()">열 제거</button> -->
-        <button type="button" onclick="copyTableHTML()">테이블 HTML 복사</button><br>
-        <button type="button" onclick="inputHtmlAll()">html로 데이터 일괄 입력</button>
-        <button type="button" onclick="inputExcelAll()">엑셀로 데이터 일괄 입력</button><br>
-        <button type="button" onclick="removeSpace()">빈칸 제거</button>
-        <button type="button" onclick="allClear()">클리어</button><br>
-        <button type="button" onclick="inputDate()">이번주 날짜 자동입력</button>
-        <button type="button" onclick="inputNextDate()">다음주 날짜 자동입력</button>
-    </div>
-    <div>
-        <h4 class="tit2">
-            <input type="text" id="tableTitle" placeholder="예)혜화문화관">
-        </h4>
-        <div class="tbl_st scroll_gr mgt10">
-            <table id="mealTable">
-                <caption></caption>
-                <thead>
-                    <tr id="hdTr">
-                        <th>구분</th>
-                        <!-- 날짜 열은 JavaScript로 추가됩니다 -->
-                        <th><input type="text" placeholder="날짜 입력"></th>
-                        <th><input type="text" placeholder="날짜 입력"></th>
-                        <th><input type="text" placeholder="날짜 입력"></th>
-                        <th><input type="text" placeholder="날짜 입력"></th>
-                        <th><input type="text" placeholder="날짜 입력"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>조식</th>
-                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                    </tr>
-                    <tr>
-                        <th>중식<br>[Extras Bar]</th>
-                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                    </tr>
-                    <tr>
-                        <th>석식</th>
-                        <!-- 식단 내용은 JavaScript로 추가되는 td 내 textarea에 입력 -->
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                        <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="page-wrapper">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-icon">🍱</div>
+            <div>
+                <h1>대전대 식단 생성기</h1>
+                <p>주간 식단표를 작성하고 HTML 코드로 복사합니다</p>
+            </div>
         </div>
-    </div>
-    <div>
-        <textarea id="allTextarea" placeholder="데이터 일괄 입력"></textarea>
-        <select id="allSelect">
-            <option value="조식">조식</option>
-            <option value="중식">중식</option>
-            <option value="석식">석식</option>
-        </select>
-        <label for="pasteAt"><input type="checkbox" id="pasteAt">덮어쓰기 여부</label>
+
+        <!-- Toolbar Card -->
+        <div class="card">
+            <div class="card-label">도구</div>
+            <div class="toolbar">
+                <button type="button" class="btn-copy" onclick="copyTableHTML()">
+                    📋 테이블 HTML 복사
+                </button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="btn-input" onclick="inputHtmlAll()">
+                    📥 HTML 일괄 입력
+                </button>
+                <button type="button" class="btn-input" onclick="inputExcelAll()">
+                    📊 엑셀 일괄 입력
+                </button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="btn-util" onclick="removeSpace()">
+                    🧹 빈칸 제거
+                </button>
+                <button type="button" class="btn-clear" onclick="allClear()">
+                    🗑 클리어
+                </button>
+                <div class="toolbar-sep"></div>
+                <button type="button" class="btn-date" onclick="inputDate()">
+                    📅 이번주 날짜
+                </button>
+                <button type="button" class="btn-date2" onclick="inputNextDate()">
+                    📅 다음주 날짜
+                </button>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="card">
+            <div class="card-label">식단표</div>
+
+            <div class="title-row">
+                <span class="title-badge">제목</span>
+                <input type="text" id="tableTitle" placeholder="예) 혜화문화관">
+            </div>
+
+            <div class="table-scroll">
+                <table class="tbl_st" id="mealTable">
+                    <caption></caption>
+                    <thead>
+                        <tr id="hdTr">
+                            <th>구분</th>
+                            <th><input type="text" placeholder="날짜 입력"></th>
+                            <th><input type="text" placeholder="날짜 입력"></th>
+                            <th><input type="text" placeholder="날짜 입력"></th>
+                            <th><input type="text" placeholder="날짜 입력"></th>
+                            <th><input type="text" placeholder="날짜 입력"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>조식</th>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        </tr>
+                        <tr>
+                            <th>중식<br>[Extras Bar]</th>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        </tr>
+                        <tr>
+                            <th>석식</th>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                            <td><textarea placeholder="식단 내용 입력 (줄바꿈은 엔터)"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Batch Input Card -->
+        <div class="card">
+            <div class="card-label">일괄 입력</div>
+            <div class="batch-row">
+                <textarea id="allTextarea" placeholder="HTML 또는 엑셀 데이터를 여기에 붙여넣으세요"></textarea>
+                <div class="batch-controls">
+                    <select id="allSelect">
+                        <option value="조식">조식</option>
+                        <option value="중식">중식</option>
+                        <option value="석식">석식</option>
+                    </select>
+                    <label class="checkbox-label" for="pasteAt">
+                        <input type="checkbox" id="pasteAt">
+                        덮어쓰기 여부
+                    </label>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -203,7 +531,7 @@
             if(headRow.children.length > 5){
                 alert('열은 5개까지만 추가 가능합니다.')
                 return;
-            } 
+            }
 
             // 헤더에 날짜 입력 필드가 있는 th 추가
             const newHeaderTh = document.createElement('th');
@@ -288,7 +616,7 @@
                     outputCol.style.width = (80 / (numberOfCols-1)) + '%';
                 }
 
-                
+
                 outputColgroup.appendChild(outputCol);
             }
             outputTable.appendChild(outputColgroup); // table의 첫 번째 자식으로 colgroup 추가
@@ -467,60 +795,45 @@
 
         // 날짜를 'YYYY.MM.DD.' 형식으로 포맷하는 헬퍼 함수입니다.
         function formatAsYYYYMMDD_Dot(date) {
-            const year = date.getFullYear(); // 연도를 가져옵니다.
-            // 월은 0부터 시작하므로 1을 더하고, 두 자리로 맞추기 위해 padStart를 사용합니다.
+            const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            // 일자를 가져오고, 두 자리로 맞추기 위해 padStart를 사용합니다.
             const day = date.getDate().toString().padStart(2, '0');
-
-            return `${year}.${month}.${day}.`; // 'YYYY.MM.DD.' 형식의 문자열을 반환합니다. [[8]](https://ji-u.tistory.com/7), [[9]](https://sweets1327.tistory.com/63)
+            return `${year}.${month}.${day}.`;
         }
 
         // 이번 주 월요일부터 금요일까지의 날짜를 구하는 함수입니다.
         function getWeekdayDates(nextWeekAt) {
-            const today = new Date(); // 현재 날짜와 시간을 가져옵니다.
-            const currentDay = today.getDay(); // 현재 요일을 가져옵니다 (0: 일요일, 1: 월요일, ..., 6: 토요일). [[9]](https://sweets1327.tistory.com/63)
+            const today = new Date();
+            const currentDay = today.getDay();
 
-            // 이번 주 월요일 날짜를 계산합니다.
-            // Date.setDate() 메서드를 사용하면 날짜를 더하거나 뺄 수 있습니다. [[1]](https://blog.naver.com/sonyalpha1004/222217844918?viewType=pc), [[2]](https://spprince.tistory.com/699)
-            // 오늘 요일(currentDay)에서 월요일(1)까지 차이나는 일수만큼 오늘 날짜에서 빼줍니다.
-            // getDay()가 일요일(0)부터 시작하므로, 계산 편의상 (currentDay + 6) % 7 만큼 빼주면 됩니다.
-            // 예: 오늘이 수요일(3)이면 (3+6)%7=2, 즉 2일 전이 월요일.
-            // 예: 오늘이 일요일(0)이면 (0+6)%7=6, 즉 6일 전이 월요일.
             const daysToSubtract = (currentDay + 6) % 7;
-            // 다음주 월요일
             let daysToAdd = (1 - currentDay + 7) % 7;
             if (daysToAdd === 0) {
                 daysToAdd = 7;
             }
 
-            const mondayDate = new Date(today); // 현재 날짜를 복사합니다.
+            const mondayDate = new Date(today);
             if(nextWeekAt){
-                mondayDate.setDate(today.getDate() + daysToAdd); // 복사한 날짜를 이번 주 월요일로 설정합니다.
+                mondayDate.setDate(today.getDate() + daysToAdd);
             }
             else{
-                mondayDate.setDate(today.getDate() - daysToSubtract); // 복사한 날짜를 이번 주 월요일로 설정합니다.
+                mondayDate.setDate(today.getDate() - daysToSubtract);
             }
 
-            const weekdays = []; // 월요일부터 금요일까지의 날짜를 저장할 배열입니다.
-            const currentDate = new Date(mondayDate); // 월요일 날짜부터 시작합니다.
+            const weekdays = [];
+            const currentDate = new Date(mondayDate);
 
-            // 월요일부터 금요일까지 총 5일이므로 5번 반복합니다.
             for (let i = 0; i < 5; i++) {
-                // 현재 날짜를 원하는 형식으로 포맷하여 배열에 추가합니다.
                 weekdays.push(formatAsYYYYMMDD_Dot(currentDate));
-                // 다음 날짜로 이동합니다.
                 currentDate.setDate(currentDate.getDate() + 1);
             }
 
-            return weekdays; // 결과 배열을 반환합니다.
+            return weekdays;
         }
 
         // 날짜 자동입력
         function inputDate(){
-            const hdTr = document.querySelector('#hdTr');
             const weekDates = getWeekdayDates();
-
             weekDates.forEach((v, i) => {
                 document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v;
             });
@@ -528,9 +841,7 @@
 
         // 다음주 날짜 자동입력
         function inputNextDate(){
-            const hdTr = document.querySelector('#hdTr');
             const weekDates = getWeekdayDates(true);
-
             weekDates.forEach((v, i) => {
                 document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v;
             });
