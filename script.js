@@ -1087,6 +1087,23 @@ extractTableData("");`);
 End Sub`);
     });
 
+    // 대전대 회원 등록 쿼리
+    $('#btnFunc24').click(function(){
+        const seq = $('#inFunc24_1').val();
+        const mberId = $('#inFunc24_2').val();
+        const mberNm = $('#inFunc24_3').val();
+        const deptCd = $('#inFunc24_4').val();
+        const deptNm = $('#inFunc24_5').val();
+        const insttNm = $('#inFunc24_6').val();
+        const insttCd = $('#inFunc24_7').val();
+        
+        let query = '';
+        query += `insert into tap_mm_mber_manage values(${seq}, '${mberId}', '${mberNm}', '==', null, null, null, 'cikey', 'certiKey', sysdate, null);\n`;
+        query += `insert into tap_mm_mber_ty values(${seq}, '${mberId}', 5, '${deptCd}', '${deptNm}', null, null, 'Y', '시스템', 'system', sysdate, 'S', '${insttNm}', '${insttCd}', 'S');`;
+
+        copy(query);
+    });
+
     // 버튼 클릭 시 팝업 출력
     $('button').click(function () {
         showPopup();
