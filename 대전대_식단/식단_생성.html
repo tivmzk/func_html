@@ -202,6 +202,32 @@
             font-weight: 400;
         }
 
+        #tableTitle[readonly] {
+            background: #f0f4f8;
+            color: #4a5568;
+            cursor: default;
+        }
+
+        #titleSelect {
+            padding: 9px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            background: #fafcff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        #titleSelect:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.13);
+        }
+
         /* ===== Table Wrapper ===== */
         .table-scroll {
             overflow-x: auto;
@@ -456,6 +482,12 @@
 
             <div class="title-row">
                 <span class="title-badge">제목</span>
+                <select id="titleSelect" onchange="onTitleSelectChange(this)">
+                    <option value="">직접입력</option>
+                    <option value="혜화문화관">혜화문화관</option>
+                    <option value="2생활관">2생활관</option>
+                    <option value="5생활관(HRC)">5생활관(HRC)</option>
+                </select>
                 <input type="text" id="tableTitle" placeholder="예) 혜화문화관">
             </div>
 
@@ -524,6 +556,19 @@
     </div>
 
     <script>
+        // 제목 선택
+        function onTitleSelectChange(select) {
+            const titleInput = document.getElementById('tableTitle');
+            if (select.value === '') {
+                titleInput.value = '';
+                titleInput.removeAttribute('readonly');
+                titleInput.focus();
+            } else {
+                titleInput.value = select.value;
+                titleInput.setAttribute('readonly', true);
+            }
+        }
+
         // 열 추가 함수
         function addCol() {
             const headRow = document.querySelector('#hdTr');
