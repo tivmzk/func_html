@@ -513,8 +513,8 @@ extractTableData("");`);
             $('#tbFunc10_2 thead').append(getElem('th|textarea', '', 'class="chk"|'));
         }
         else {
-            $('#tbFunc10_1 thead').append(getElem('th|textarea'));
-            $('#tbFunc10_2 thead').append(getElem('th|textarea'));
+            $('#tbFunc10_1 thead').append(getElem('th|textarea', '', 'class="val"|'));
+            $('#tbFunc10_2 thead').append(getElem('th|textarea', '', 'class="val"|'));
         }
     });
     // 두 테이블의 순서 맞추기 실행
