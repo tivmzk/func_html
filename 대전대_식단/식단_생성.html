@@ -743,18 +743,11 @@
             dataTh.forEach((v, i) => {
                document.querySelector(`#hdTr th:nth-child(${i+2}) input`).value = v.innerText;
             });
-            const dataTd1 = parseData.querySelectorAll('table tbody tr:nth-child(1) td:nth-child(n+2)');
-            dataTd1.forEach((v, i) => {
-               document.querySelector(`#mealTable tbody tr:nth-child(1) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
-            });
-            const dataTd2 = parseData.querySelectorAll('table tbody tr:nth-child(2) td:nth-child(n+2)');
-            dataTd2.forEach((v, i) => {
-               document.querySelector(`#mealTable tbody tr:nth-child(2) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
-            });
-            const dataTd3 = parseData.querySelectorAll('table tbody tr:nth-child(3) td:nth-child(n+2)');
-            dataTd3.forEach((v, i) => {
-               document.querySelector(`#mealTable tbody tr:nth-child(3) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
-            });
+            for (let r = 1; r <= 3; r++) {
+                parseData.querySelectorAll(`table tbody tr:nth-child(${r}) td:nth-child(n+2)`).forEach((v, i) => {
+                    document.querySelector(`#mealTable tbody tr:nth-child(${r}) td:nth-child(${i+2}) textarea`).value = replaceText(v.innerHTML);
+                });
+            }
         }
 
         // Excel 일괄 입력
@@ -785,19 +778,17 @@
                 return;
             }
 
-            const realArr = [];
-
-            for(let i = 0; i < max; i++){
-                const arr = [];
-                for(let j = 0; j < splitData.length; j++){
-                    arr.push(splitData[j][i]);
-                }
-                realArr.push(arr);
-            }
-
-            dataTd.forEach((v, i) => {
-               v.querySelector('textarea').value = replaceText(realArr[i].join('\n'));
+            transposeMatrix(splitData, max).forEach((v, i) => {
+               dataTd[i].querySelector('textarea').value = replaceText(v.join('\n'));
             });
+        }
+
+        function transposeMatrix(matrix, cols) {
+            const result = [];
+            for (let i = 0; i < cols; i++) {
+                result.push(matrix.map(row => row[i]));
+            }
+            return result;
         }
 
         // 문자 수정
@@ -917,15 +908,7 @@
                         max = max < arr.length ? arr.length : max;
                     });
 
-                    const realArr = [];
-
-                    for(let i = 0; i < max; i++){
-                        const arr = [];
-                        for(let j = 0; j < splitData.length; j++){
-                            arr.push(splitData[j][i]);
-                        }
-                        realArr.push(arr);
-                    }
+                    const realArr = transposeMatrix(splitData, max);
 
                     textareas.forEach((v, i) => {
                         if(realArr[i-index] != undefined && i >= index){

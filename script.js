@@ -9,13 +9,12 @@ $(function () {
     // 검색 이벤트 추가
     $('#srchTxt').keyup(function (e) {
         var txt = $(this).val().toUpperCase().replaceAll(' ', '');
+        if (txt === '') {
+            $('ul.list a').css('color', '');
+            return;
+        }
         $('ul.list a').each((i, v) => {
-            if($(v).text().toUpperCase().includes(txt) && txt != ''){
-                $(v).css('color', 'red');
-            }
-            else{
-                $(v).css('color', '');
-            }
+            $(v).css('color', $(v).text().toUpperCase().includes(txt) ? 'red' : '');
         });
     });
 
@@ -107,12 +106,7 @@ $(function () {
     });
     // 스네이크 케이스 -> 캐멀 케이스
     $('#btnFunc3').click(function () {
-        var data = $('#taFunc3').val();
-        data = data.toLowerCase();
-        var result = data.replace(/_([a-z])/g, function (match, letter) {
-            return letter.toUpperCase();
-        });
-        $('#taFunc3').val(copy(result));
+        $('#taFunc3').val(copy(toCamelCase($('#taFunc3').val())));
     });
     // 캐멀 케이스 -> 스네이크 케이스
     $('#btnFunc4').click(function () {

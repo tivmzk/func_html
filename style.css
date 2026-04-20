@@ -276,16 +276,13 @@ button:active {
     box-shadow: none;
 }
 
-#btnFunc9_1, #btnFunc9_2, #btnFunc9_3, #btnFunc9_4,
-#btnFunc9_5, #btnFunc9_6, #btnFunc9_7, #btnFunc9_8, #btnFunc9_9, #btnFunc9_10 {
+[id^="btnFunc9_"] {
     background: var(--surface2);
     color: var(--text-muted);
     border: 1.5px solid var(--border);
 }
 
-#btnFunc9_1:hover, #btnFunc9_2:hover, #btnFunc9_3:hover, #btnFunc9_4:hover,
-#btnFunc9_5:hover, #btnFunc9_6:hover, #btnFunc9_7:hover, #btnFunc9_8:hover,
-#btnFunc9_9:hover, #btnFunc9_10:hover {
+[id^="btnFunc9_"]:hover {
     border-color: var(--accent);
     color: var(--accent);
     background: var(--accent-light);
@@ -553,11 +550,11 @@ span {
     color: var(--text-muted);
 }
 
-.section1 [style*="margin-bottom"] {
+.btn-group {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 10px !important;
+    margin-bottom: 10px;
 }
 
 #inFunc13 {
