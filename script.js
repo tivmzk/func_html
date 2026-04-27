@@ -751,17 +751,17 @@ extractTableData("");`);
         };
 
         var result = $('#taFunc13').val().replaceAll(' ', '').replaceAll('\n\n', '\n').trim().split('\n').map(line => {
-            const match = line.match(/(\d+)\.(\d+)\./);
+            const match = line.match(/(\d+)?[.,\/-]?(\d+)[.,\/-](\d+)\.?/);
             if (match) {
-                const month = months[match[1]];
-                const day = match[2].padStart(2, '0');
+                const month = months[match[2]];
+                const day = match[3].padStart(2, '0');
                 const date = `${year}/${month}/${day}`;
 
                 if (line.includes('~')) {
-                    const endMatch = line.match(/~(\d+)\.(\d+)\./);
+                    const endMatch = line.match(/~(\d+)?[.,\/-]?(\d+)[.,\/-](\d+)\.?/);
                     if (endMatch) {
-                        const endMonth = months[endMatch[1]];
-                        const endDay = endMatch[2].padStart(2, '0');
+                        const endMonth = months[endMatch[2]];
+                        const endDay = endMatch[3].padStart(2, '0');
                         return `${date}\t${year}/${endMonth}/${endDay}`;
                     }
                 }
