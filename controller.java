@@ -104,27 +104,11 @@ public class |ALIAS||KEYWORD|Controller {
 		if(userInfo == null){
 			return CommonUtil.alertException(response, "로그인이 필요합니다.");
 		}
-		//관리 시스템 리스트 호출
-		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-		// 접속한 관리자페이지 정보
-		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-		// 시스템 아이디 설정
-		String sysId = "";
-
-		if (commonMap.get("sysId") != null) {
-			sysId = Objects.toString(commonMap.get("sysId"), "");
-		} else {
-			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-		}
-
-		//시스템 아이디 설정
-		commonMap.put("sysId", sysId);
 
 		try {
 			//권한체크
-			if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList) ) {
-				return CommonUtil.alertException(response, "유효하지 않은 요청입니다.");
+			if (!authChk(request, userInfo, commonMap.getMap())) {
+				return CommonUtil.alertException(response, "권한이 없습니다.");
 			}
 			
 			if(commonMap.get("pageIndex") == null) {
@@ -159,25 +143,9 @@ public class |ALIAS||KEYWORD|Controller {
 		if(userInfo == null){
 			return CommonUtil.alertException(response, "로그인이 필요합니다.");
 		}
-		//관리 시스템 리스트 호출
-		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-		// 접속한 관리자페이지 정보
-		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-		// 시스템 아이디 설정
-		String sysId = "";
-
-		if (commonMap.get("sysId") != null) {
-			sysId = Objects.toString(commonMap.get("sysId"), "");
-		} else {
-			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-		}
-
-		//시스템 아이디 설정
-		commonMap.put("sysId", sysId);
 		//권한체크
-		if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList) ) {
-			return CommonUtil.alertException(response, "유효하지 않은 요청입니다.");
+		if (!authChk(request, userInfo, commonMap.getMap())) {
+			return CommonUtil.alertException(response, "권한이 없습니다.");
 		}
 		
 		try {
@@ -209,31 +177,15 @@ public class |ALIAS||KEYWORD|Controller {
 		if(userInfo == null){
 			return CommonUtil.alertException(response, "로그인이 필요합니다.");
 		}
-		//관리 시스템 리스트 호출
-		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-		// 접속한 관리자페이지 정보
-		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-		// 시스템 아이디 설정
-		String sysId = "";
-
-		if (commonMap.get("sysId") != null) {
-			sysId = Objects.toString(commonMap.get("sysId"), "");
-		} else {
-			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-		}
-
-		//시스템 아이디 설정
-		commonMap.put("sysId", sysId);
 		//권한체크
-		if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList) ) {
-			return CommonUtil.alertException(response, "유효하지 않은 요청입니다.");
+		if (!authChk(request, userInfo, commonMap.getMap())) {
+			return CommonUtil.alertException(response, "권한이 없습니다.");
 		}
-		try {
-		}
-		catch(SQLException | IOException e) {
-			CommonLog.debug(e, this.getClass(), "insert|KEYWORD|InfoPage");
-		}
+		// try {
+		// }
+		// catch(SQLException | IOException e) {
+		// 	CommonLog.debug(e, this.getClass(), "insert|KEYWORD|InfoPage");
+		// }
 		
 		model.addAttribute("commonMap", commonMap.getMap());
 		model.addAttribute("content", "nfu/|PATH|/|ALIAS_LOWER|/|KEYWORD2|Insert.jsp");
@@ -258,25 +210,8 @@ public class |ALIAS||KEYWORD|Controller {
 				resultMap.put("resultAt", "A");
 				return;
 			}
-			//관리 시스템 리스트 호출
-			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-			// 접속한 관리자페이지 정보
-			Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-			// 시스템 아이디 설정
-			String sysId = "";
-
-			if (commonMap.get("sysId") != null) {
-				sysId = Objects.toString(commonMap.get("sysId"), "");
-			} else {
-				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-			}
-
-			//시스템 아이디 설정
-			commonMap.put("sysId", sysId);
-
 			// 권한 체크
-			if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList)) {
+			if (!authChk(request, userInfo, commonMap.getMap())) {
 				// ajax 결과값 설정
 				resultMap.put("resultAt", "A");
 				return;
@@ -324,25 +259,9 @@ public class |ALIAS||KEYWORD|Controller {
 		if(userInfo == null){
 			return CommonUtil.alertException(response, "로그인이 필요합니다.");
 		}
-		//관리 시스템 리스트 호출
-		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-		// 접속한 관리자페이지 정보
-		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-		// 시스템 아이디 설정
-		String sysId = "";
-
-		if (commonMap.get("sysId") != null) {
-			sysId = Objects.toString(commonMap.get("sysId"), "");
-		} else {
-			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-		}
-
-		//시스템 아이디 설정
-		commonMap.put("sysId", sysId);
 		//권한체크
-		if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList) ) {
-			return CommonUtil.alertException(response, "유효하지 않은 요청입니다.");
+		if (!authChk(request, userInfo, commonMap.getMap())) {
+			return CommonUtil.alertException(response, "권한이 없습니다.");
 		}
 		
 		try {
@@ -376,25 +295,8 @@ public class |ALIAS||KEYWORD|Controller {
 				resultMap.put("resultAt", "A");
 				return;
 			}
-			//관리 시스템 리스트 호출
-			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-			// 접속한 관리자페이지 정보
-			Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-			// 시스템 아이디 설정
-			String sysId = "";
-
-			if (commonMap.get("sysId") != null) {
-				sysId = Objects.toString(commonMap.get("sysId"), "");
-			} else {
-				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-			}
-
-			//시스템 아이디 설정
-			commonMap.put("sysId", sysId);
-
 			// 권한 체크
-			if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList)) {
+			if (!authChk(request, userInfo, commonMap.getMap())) {
 				// ajax 결과값 설정
 				resultMap.put("resultAt", "A");
 				return;
@@ -444,28 +346,9 @@ public class |ALIAS||KEYWORD|Controller {
 				resultMap.put("resultAt", "A");
 				return;
 			}
-			//관리 시스템 리스트 호출
-			List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mbrId")+"_manageSysList");
-
-			// 접속한 관리자페이지 정보
-			Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
-			// 시스템 아이디 설정
-			String sysId = "";
-
-			if (commonMap.get("sysId") != null) {
-				sysId = Objects.toString(commonMap.get("sysId"), "");
-			} else {
-				sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
-			}
-
-			//시스템 아이디 설정
-			commonMap.put("sysId", sysId);
-
-			// 권한 체크
-			if (!CommonAuth.hasAuthForCrud(userInfo, sysId, manageList)) {
-				// ajax 결과값 설정
-				resultMap.put("resultAt", "A");
-				return;
+			//권한체크
+			if (!authChk(request, userInfo, commonMap.getMap())) {
+				return CommonUtil.alertException(response, "권한이 없습니다.");
 			}
 			
 			Map |KEYWORD2|Info = commonService.selectMap("|NAMESPACE|.select|KEYWORD|Info", commonMap.getMap());
@@ -499,5 +382,35 @@ public class |ALIAS||KEYWORD|Controller {
 				}
 			}
 		}
+	}
+
+	/**
+	 * 권한 체크
+	 * 
+	 * @param request
+	 * @param userInfo
+	 * @param commonMap
+	 * @return result
+	 */
+	private boolean authChk(HttpServletRequest request, Map userInfo, Map commonMap) {
+		//관리 시스템 리스트 호출
+		List<Map<String, Object>> manageList = (List<Map<String, Object>>) SystemSessionInfo.getSessionInfo(request, userInfo.get("mberId")+"_manageSysList");
+
+		// 접속한 관리자페이지 정보
+		Map<String, Object> SSmanageSysInfo = (Map<String, Object>) SystemSessionInfo.getSessionInfo(request, "SSmanageSysInfo");
+		// 시스템 아이디 설정
+		String sysId = "";
+
+		if (commonMap.get("sysId") != null) {
+			sysId = Objects.toString(commonMap.get("sysId"), "");
+		} else {
+			sysId = Objects.toString(SSmanageSysInfo.get("sysId"), "");
+			commonMap.put("sysNm", SSmanageSysInfo.get("sysNm"));
+		}
+		
+		commonMap.put("sysId", sysId);
+		
+		//권한체크
+		return CommonAuth.hasAuthForCrud(userInfo, sysId, manageList);
 	}
 }
