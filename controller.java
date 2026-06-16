@@ -348,7 +348,9 @@ public class |ALIAS||KEYWORD|Controller {
 			}
 			//권한체크
 			if (!authChk(request, userInfo, commonMap.getMap())) {
-				return CommonUtil.alertException(response, "권한이 없습니다.");
+				// ajax 결과값 설정
+				resultMap.put("resultAt", "A");
+				return;
 			}
 			
 			Map |KEYWORD2|Info = commonService.selectMap("|NAMESPACE|.select|KEYWORD|Info", commonMap.getMap());
