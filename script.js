@@ -136,8 +136,8 @@ $(function () {
         data2.forEach(v => {
             result += `${data1}${v}${data3}\n`;
         });
-        $('#taFunc6_1').val('');
-        $('#taFunc6_3').val('');
+        // $('#taFunc6_1').val('');
+        // $('#taFunc6_3').val('');
         $('#taFunc6_2').val(result);
         copy(result);
     });
@@ -742,34 +742,31 @@ extractTableData("");`);
     // 날짜 변환(대전대 학사일정 한글파일 포맷을 수정)
     $('#btnFunc13').click(function () {
         const year = $('#inFunc13').val();
-        const months = {
-            '1': '01', '2': '02', '3': '03', '4': '04', '5': '05',
-            '6': '06', '7': '07', '8': '08', '9': '09', '10': '10',
-            '11': '11', '12': '12',
-            '01':'01', '02':'02', '03':'03', '04':'04', '05':'05',
-            '06':'06', '07':'07', '08':'08', '09':'09'
-        };
-
+    
         var result = $('#taFunc13').val().replaceAll(' ', '').replaceAll('\n\n', '\n').trim().split('\n').map(line => {
-            const match = line.match(/(\d+)?[.,\/-]?(\d+)[.,\/-](\d+)\.?/);
+            // MM.DD 형식 캡처 (연도 없는 형태에 최적화)
+            const dateRegex = /(\d{1,2})[.,\/-](\d{1,2})\.?/;
+            
+            const match = line.match(dateRegex);
             if (match) {
-                const month = months[match[2]];
-                const day = match[3].padStart(2, '0');
+                const month = match[1].padStart(2, '0');
+                const day = match[2].padStart(2, '0');
                 const date = `${year}/${month}/${day}`;
-
+    
                 if (line.includes('~')) {
-                    const endMatch = line.match(/~(\d+)?[.,\/-]?(\d+)[.,\/-](\d+)\.?/);
+                    // '~' 이후의 MM.DD 형식 캡처
+                    const endMatch = line.slice(line.indexOf('~')).match(dateRegex);
                     if (endMatch) {
-                        const endMonth = months[endMatch[2]];
-                        const endDay = endMatch[3].padStart(2, '0');
+                        const endMonth = endMatch[1].padStart(2, '0');
+                        const endDay = endMatch[2].padStart(2, '0');
                         return `${date}\t${year}/${endMonth}/${endDay}`;
                     }
                 }
                 return `${date}\t${date}`;
             }
-            return line; // 변환할 수 없는 형식은 그대로 반환
+            return line;
         }).join('\n');
-
+    
         copy(result);
         $('#taFunc13').val(result);
     });
