@@ -1,0 +1,6 @@
+{
+  "name": "Func HTML",
+  "description": "브라우저 기반 개발자 유틸리티 도구 및 텍스트/코드 생성기",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
