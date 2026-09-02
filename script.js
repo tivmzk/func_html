@@ -851,7 +851,7 @@ console.log('게시물 링크:', list);`,
         // [9-10] 테이블 내용 TSV 추출
         tableExtract: `var table = document.querySelector('table');
 var rows = Array.from(table.rows);
-var text = rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()).join('\t')).join('\n');
+var text = rows.map(row => Array.from(row.cells).map(cell => cell.innerText.trim()).join('\\t')).join('\\n');
 console.log(text);`
     };
 
