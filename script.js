@@ -1,177 +1,75 @@
+// 전역 팝업 오픈 함수
 function showPopup() {
     document.querySelector('.popup').classList.add('show');
 }
-$(function () {
-    // 팝업 이벤트 추가
-    document.querySelector('.popup').addEventListener('animationend', function() {
-        this.classList.remove('show');
-    });
-    // 검색 이벤트 추가
-    $('#srchTxt').keyup(function (e) {
-        var txt = $(this).val().toUpperCase().replaceAll(' ', '');
-        if (txt === '') {
-            $('ul.list a').css('color', '');
-            return;
-        }
-        $('ul.list a').each((i, v) => {
-            $(v).css('color', $(v).text().toUpperCase().includes(txt) ? 'red' : '');
-        });
-    });
 
-    // 목차 추가
-    var li = '';
-    $('[class^=section]').each((i, v) => {
-        li += getElem('li|a', (i+1) + '. ' + $(v).find('.secTit > h3').text(), `|href="#" data-id="${i}"`) + '\n';
-        $(v).attr('id', `${i}`);
-        $(v).hide();
+// -----------------------------------------------------------------------------
+// 공통 유틸리티 함수
+// -----------------------------------------------------------------------------
+
+/**
+ * HTML 태그를 생성하는 함수
+ */
+function getElem(tagStr, content = '', attrStr = '') {
+    const tags = tagStr.split('|');
+    const attrs = attrStr ? attrStr.split('|') : [];
+
+    let openTags = '';
+    let closeTags = '';
+
+    tags.forEach((tag, idx) => {
+        const attr = attrs[idx] ? ` ${attrs[idx]}` : '';
+        openTags += `<${tag}${attr}>`;
     });
 
-    $('body').prepend(getElem('ul', li, 'class="list"'));
-
-    function loadContent(id) {
-        $('[class^=section]').hide();    
-        $('.list a').removeClass('active');
-        if(id == -1) return;
-        $(`.list a[data-id=${id}]`).addClass('active');
-        $(`#${id}`).show();
+    for (let i = tags.length - 1; i >= 0; i--) {
+        closeTags += `</${tags[i]}>`;
     }
 
-    $('.list').on('click', 'a', function (e) {
-        // $('.list a').removeClass('active');
-        // $(this).addClass('active');
-        // $('[class^=section]').hide();
-        const id = $(this).data('id');
-        // $(`#${id}`).show();
+    return `${openTags}${content}${closeTags}`;
+}
 
-        // 뒤로가기 기능
-        const state = {page:id};
-        history.pushState(state, '', location.href);
-        loadContent(id);
-        e.preventDefault();
-    });
-    window.addEventListener('popstate', function (e) {
-        if (e.state) {
-            // event.state는 pushState에서 저장한 객체입니다.
-            loadContent(e.state.page); // 상태에 따라 콘텐츠 로드
-        } else {
-            loadContent(-1); // 기본 콘텐츠 로드
-        }
-    });
+/**
+ * 클립보드 복사 유틸리티
+ */
+function copy(str) {
+    if (str.endsWith('\n')) {
+        str = str.slice(0, -1);
+    }
 
-    // 목록에서 중복 제거
-    $('#btnFunc1').click(function () {
-        var str = $('#taFunc1').val();
-        var s = new Set();
-        var r = '';
-        str.split('\n').forEach(v => {
-            s.add(v);
-        });
-        s.forEach(v => {
-            r += v + '\n';
-        });
-        $('#taFunc1').val(copy(r));
-    });
-    // 두 목록에서 다른 부분 찾기
-    $('#btnFunc2').click(function () {
-        var op1 = $('#cbFunc2_1:checked').val();
-        var op2 = $('#cbFunc2_2:checked').val();
-        var arr1 = $('#taFunc2_1').val().split('\n').map(v => v.trim());
-        var arr2 = $('#taFunc2_2').val().split('\n').map(v => v.trim());
-
-        if (op1) {
-            arr1 = arr1.map(v => v.replaceAll(' ', ''));
-            arr2 = arr2.map(v => v.replaceAll(' ', ''));
-        }
-        if (op2) {
-            arr1 = arr1.map(v => v.toUpperCase());
-            arr2 = arr2.map(v => v.toUpperCase());
-        }
-
-        const set1 = new Set(arr1);
-        const set2 = new Set(arr2);
-
-        // 차집합을 구합니다.
-        const difference1 = [...set1].filter(item => !set2.has(item));
-        const difference2 = [...set2].filter(item => !set1.has(item));
-
-        var s = '';
-        s += getElem('p|strong', '입력1에만 있는 것');
-        difference1.forEach(v => s += getElem('p', v));
-        s += getElem('p|strong', '입력2에만 있는 것');
-        difference2.forEach(v => s += getElem('p', v));
-        $('#resultFunc2').empty();
-        $('#resultFunc2').append(s);
-        $('#resultFunc2').focus();
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(str).then(() => showPopup());
+    } else {
+        const t = document.createElement("textarea");
+        document.body.appendChild(t);
+        t.value = str;
+        t.select();
+        document.execCommand('copy');
+        document.body.removeChild(t);
         showPopup();
-    });
-    // 스네이크 케이스 -> 캐멀 케이스
-    $('#btnFunc3').click(function () {
-        $('#taFunc3').val(copy(toCamelCase($('#taFunc3').val())));
-    });
-    // 캐멀 케이스 -> 스네이크 케이스
-    $('#btnFunc4').click(function () {
-        var data = $('#taFunc4').val();
+    }
+    return str;
+}
 
-        var result = data.replace(/([A-Z])/g, function (match, letter) {
-            return '_' + letter;
-        });
-        result = result.toUpperCase();
-        $('#taFunc4').val(copy(result));
-    });
-    // hidden input 태그 생성
-    $('#btnFunc5').click(function () {
-        var data = $('#taFunc5').val().split('\n');
-        var result = '';
-        data.forEach(v => {
-            result += `<input type="hidden" id="${v}" name="${v}">\n`;
-        });
-        $('#taFunc5').val(copy(result));
-    });
-    // 좌우에 감싸기
-    $('#btnFunc6').click(function () {
-        var data1 = $('#taFunc6_1').val();
-        var data2 = $('#taFunc6_2').val().split('\n');
-        var data3 = $('#taFunc6_3').val();
-        var result = '';
-        data2.forEach(v => {
-            result += `${data1}${v}${data3}\n`;
-        });
-        // $('#taFunc6_1').val('');
-        // $('#taFunc6_3').val('');
-        $('#taFunc6_2').val(result);
-        copy(result);
-    });
-    // 줄바꿈 2개를 1개로
-    $('#btnFunc7').click(function () {
-        var result = $('#taFunc7').val().replaceAll('\n\n', '\n');
+/**
+ * 문자열 반복
+ */
+function strMul(str, num) {
+    return str.repeat(num);
+}
 
-        $('#taFunc7').val(copy(result));
-    });
-    // 웹접근성 테이블 이미지를 텍스트로
-    $('#btnFunc8').click(function () {
-        var data = $('#taFunc8').val().split('\n\n');
-        var result = '';
-        var list = [];
-        var maxY = 0;
+/**
+ * 스네이크 케이스 -> 캐멀 케이스 변환
+ */
+function toCamelCase(str) {
+    return str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
 
-        data.forEach((v, i) => {
-            list.push(v.split('\n'));
-            maxY = maxY < list[i].length ? list[i].length : maxY;
-        });
-
-        for (var i = 0; i < maxY; i++) {
-            for (var j = 0; j < list.length; j++) {
-                result += list[j][i] + (j == list.length - 1 ? ' | \n' : ' / ');
-            }
-        }
-
-        result = result.replaceAll('undefined', '');
-
-        $('#taFunc8').val(copy(result));
-    });
-    // 자주 사용하는 스크립트
-    function getSelectTcoString(nttQuery, imgQuery, tableQuery, aQuery){
-        return `async function searchTco(pageS, pageE) {
+/**
+ * 자주 사용하는 스크립트 템플릿 생성기
+ */
+function getSelectTcoString(nttQuery, imgQuery, tableQuery, aQuery) {
+    return `async function searchTco(pageS, pageE) {
 async function getDoc(url) {
 console.log(url + ' 조회');
 const res = await fetch(url);
@@ -246,106 +144,246 @@ catch(e){
 console.log(results.length > 0 ? results.join('\\n') : '없음');
 };
 searchTco(1,5);`;
+}
+
+// -----------------------------------------------------------------------------
+// 이벤트 라이프사이클 (DOM Ready)
+// -----------------------------------------------------------------------------
+$(function () {
+    // 팝업 애니메이션 종료 이벤트 추가
+    document.querySelector('.popup').addEventListener('animationend', function () {
+        this.classList.remove('show');
+    });
+
+    // 검색 이벤트 추가
+    $('#srchTxt').on('keyup', function () {
+        const txt = $(this).val().toUpperCase().replaceAll(' ', '');
+        if (txt === '') {
+            $('ul.list a').css('color', '');
+            return;
+        }
+        $('ul.list a').each((_, v) => {
+            $(v).css('color', $(v).text().toUpperCase().includes(txt) ? 'red' : '');
+        });
+    });
+
+    // 목차 동적 생성
+    let liHtml = '';
+    $('[class^=section]').each((i, v) => {
+        const title = $(v).find('.secTit > h3').text();
+        liHtml += getElem('li|a', `${i + 1}. ${title}`, `|href="#" data-id="${i}"`) + '\n';
+        $(v).attr('id', `${i}`).hide();
+    });
+    $('body').prepend(getElem('ul', liHtml, 'class="list"'));
+
+    // 컨텐츠 전환 로직
+    function loadContent(id) {
+        $('[class^=section]').hide();$('.list a').removeClass('active');
+        if (id == -1) return;
+        $(`.list a[data-id=${id}]`).addClass('active');
+        $(`#${id}`).show();
     }
-    // 웹접근성 대전대 게시물 확인
-    $('#btnFunc9_1').click(function () {
-        copy(`console.log('----------------- img --------------------');
-            $('#nttViewForm table .Cnts img').each((i,v)=>console.log(v.alt));
-            console.log('----------------- table --------------------');
-            if($('#nttViewForm table .Cnts table caption').length != $('#nttViewForm table .Cnts table').length) console.log('caption 없는 테이블 존재');
-            $('#nttViewForm table .Cnts table caption').each((i,v)=>console.log(v.innerText));
-            console.log('----------------- a --------------------');
-            $('#nttViewForm table .Cnts a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`.replace(/ {2,}/g, ''));
+
+    // 목차 링크 클릭 이벤트
+    $('.list').on('click', 'a', function (e) {
+        e.preventDefault();
+        const id = $(this).data('id');
+        history.pushState({ page: id }, '', location.href);
+        loadContent(id);
     });
-    // 웹접근성 전남 게시물 확인
-    $('#btnFunc9_2').click(function () {
-        copy(`console.log('----------------- img --------------------');
-            $('#nttViewForm img').each((i,v)=>console.log(v.alt));
-            console.log('----------------- table --------------------');
-            if($('#nttViewForm > div > div.bbsV_cont table caption').length != $('#nttViewForm > div > div.bbsV_cont table').length) console.log('caption 없는 테이블 존재');
-            $('#nttViewForm > div > div.bbsV_cont table caption').each((i,v)=>console.log(v.innerText));
-            console.log('----------------- a --------------------');
-            $('#nttViewForm > div > div.bbsV_cont a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`.replace(/ {2,}/g, ''));
+
+    // 뒤로가기 / 앞으로가기 히스토리 이벤트
+    window.addEventListener('popstate', function (e) {
+        loadContent(e.state ? e.state.page : -1);
     });
-    // 웹접근성 전남 게시물 이미지 입력
-    $('#btnFunc9_3').click(function () {
-        copy(`$('#replcFileNmId textarea').each((i,v)=>{
-            \tvar s = $('#nttSj').val();
-            \t$(v).val(s.endsWith("사진") ? s + (i+1) : s +' 사진'+(i+1));
-            });
-            setTimeout(function(){
-                $('.nttUpdate ').click();
-            }, 0);`.replace(/ {2,}/g, ''));
+
+    // -------------------------------------------------------------------------
+    // 기능 버튼 이벤트 바인딩
+    // -------------------------------------------------------------------------
+
+    // Func 1: 중복 제거
+    $('#btnFunc1').click(function () {
+        const str = $('#taFunc1').val();
+        const uniqueLines = Array.from(new Set(str.split('\n'))).join('\n') + '\n';
+        $('#taFunc1').val(copy(uniqueLines));
     });
-    // 웹접근성 전남 일자로 최근 등록된 게시물 검색
-    $('#btnFunc9_4').click(function () {
-        copy(`async function search(urls, date) {
-        urls = urls.replaceAll('http://', 'https://');
-        urls = urls.split('\\n');
-        date = new Date(date);
-        result = '';
-        for (const [urlIdx, url] of urls.entries()) {
-            console.log(url + ' 조회 ' + '('+(urlIdx+1) + ', ' + urls.length + ')');
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error('문제가 발생했습니다: '+response.status);
-                }
-                const html = await response.text();
 
-                // HTML 문자열을 DOM 객체로 변환
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+    // Func 2: 차집합 찾기
+    $('#btnFunc2').click(function () {
+        const op1 = $('#cbFunc2_1:checked').val();
+        const op2 = $('#cbFunc2_2:checked').val();
 
-                var test = doc.querySelector('#myTable');
-                var test2 = doc.querySelector('.photo_list');
-                var test3 = doc.querySelector('.photo_list2');
-                var elems = null;
+        let arr1 = $('#taFunc2_1').val().split('\n').map(v => v.trim());
+        let arr2 = $('#taFunc2_2').val().split('\n').map(v => v.trim());
 
-                if(test){
-                    var th = doc.querySelectorAll('#subContent #myTable thead > tr > th');
-                    var idx = 0;
-                    for(var i in th){
-                        if(th[i].innerText.includes('등록일')){
-                            idx = Number(i)+1;
-                            break;
-                        }
-                    }
-                    // id로 요소 조회
-                    elems = doc.querySelectorAll('#subContent #myTable tr > td:nth-child('+idx+')');
-                }
-                else if(test2){
-                    // id로 요소 조회
-                    elems = doc.querySelectorAll('#subContent > div.subContent > div.photo_list > ul > li > a > p > span:nth-child(2)');
-                }
-                else if(test3){
-                    elems = doc.querySelectorAll('#subContent > div.subContent > div.photo_list2 > ul > li > a > dl > dd.date');
-                }
-
-                for(var v of elems){
-                    const datePattern = /\\d{4}\\.\\d{2}\\.\\d{2}/;
-                    const match = v.innerText.match(datePattern);
-
-                    if (match) {
-                        var curr = new Date(match[0]);
-                        if(curr >= date){
-                            result += url+'\\n';
-                            break;
-                        }
-                    } else {
-                        console.log(url + " : 날짜를 찾을 수 없습니다.");
-                    }
-                    
-                };
-            } catch (error) {
-                console.error('Error fetching '+url+' :', error);
-            }
+        if (op1) {
+            arr1 = arr1.map(v => v.replaceAll(' ', ''));
+            arr2 = arr2.map(v => v.replaceAll(' ', ''));
+        }
+        if (op2) {
+            arr1 = arr1.map(v => v.toUpperCase());
+            arr2 = arr2.map(v => v.toUpperCase());
         }
 
-        console.log(result);
-    }`);
+        const set1 = new Set(arr1);
+        const set2 = new Set(arr2);
+
+        const diff1 = [...set1].filter(item => !set2.has(item));
+        const diff2 = [...set2].filter(item => !set1.has(item));
+
+        let html = getElem('p|strong', '입력1에만 있는 것');
+        diff1.forEach(v => html += getElem('p', v));
+        html += getElem('p|strong', '입력2에만 있는 것');
+        diff2.forEach(v => html += getElem('p', v));
+
+        $('#resultFunc2').empty().append(html).focus();
+        showPopup();
     });
-    // 웹접근성 전남 콘텐츠 확인
+
+    // Func 3: Snake -> Camel
+    $('#btnFunc3').click(function () {
+        $('#taFunc3').val(copy(toCamelCase($('#taFunc3').val())));
+    });
+
+    // Func 4: Camel -> Snake
+    $('#btnFunc4').click(function () {
+        const data = $('#taFunc4').val();
+        const result = data.replace(/([A-Z])/g, '_$1').toUpperCase();$('#taFunc4').val(copy(result));
+    });
+
+    // Func 5: Hidden Input 태그 생성
+    $('#btnFunc5').click(function () {
+        const lines = $('#taFunc5').val().split('\n');
+        const result = lines.map(v => `<input type="hidden" id="${v}" name="${v}">`).join('\n') + '\n';
+        $('#taFunc5').val(copy(result));
+    });
+
+    // Func 6: 좌우 감싸기
+    $('#btnFunc6').click(function () {
+        const prefix = $('#taFunc6_1').val();
+        const lines = $('#taFunc6_2').val().split('\n');
+        const suffix = $('#taFunc6_3').val();
+
+        const result = lines.map(v => `${prefix}${v}${suffix}`).join('\n') + '\n';
+        $('#taFunc6_2').val(result);
+        copy(result);
+    });
+
+    // Func 7: 줄바꿈 연속 2개를 1개로
+    $('#btnFunc7').click(function () {
+        const result = $('#taFunc7').val().replaceAll('\n\n', '\n');
+        $('#taFunc7').val(copy(result));
+    });
+
+    // Func 8: 웹접근성 테이블 이미지를 텍스트로
+    $('#btnFunc8').click(function () {
+        const data = $('#taFunc8').val().split('\n\n');
+        const list = [];
+        let maxY = 0;
+
+        data.forEach((v, i) => {
+            const arr = v.split('\n');
+            list.push(arr);
+            if (arr.length > maxY) maxY = arr.length;
+        });
+
+        let result = '';
+        for (let i = 0; i < maxY; i++) {
+            for (let j = 0; j < list.length; j++) {
+                const val = list[j][i] !== undefined ? list[j][i] : '';
+                result += val + (j === list.length - 1 ? ' | \n' : ' / ');
+            }
+        }
+        $('#taFunc8').val(copy(result));
+    });
+
+    // Func 9 스크립트 복사 이벤트 연동
+    $('#btnFunc9_1').click(function () {
+        copy(`console.log('----------------- img --------------------');
+$('#nttViewForm table .Cnts img').each((i,v)=>console.log(v.alt));
+console.log('----------------- table --------------------');
+if($('#nttViewForm table .Cnts table caption').length != $('#nttViewForm table .Cnts table').length) console.log('caption 없는 테이블 존재');
+$('#nttViewForm table .Cnts table caption').each((i,v)=>console.log(v.innerText));
+console.log('----------------- a --------------------');
+$('#nttViewForm table .Cnts a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`);
+    });
+
+    $('#btnFunc9_2').click(function () {
+        copy(`console.log('----------------- img --------------------');
+$('#nttViewForm img').each((i,v)=>console.log(v.alt));
+console.log('----------------- table --------------------');
+if($('#nttViewForm > div > div.bbsV_cont table caption').length != $('#nttViewForm > div > div.bbsV_cont table').length) console.log('caption 없는 테이블 존재');
+$('#nttViewForm > div > div.bbsV_cont table caption').each((i,v)=>console.log(v.innerText));
+console.log('----------------- a --------------------');
+$('#nttViewForm > div > div.bbsV_cont a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`);
+    });
+
+    $('#btnFunc9_3').click(function () {
+        copy(`$('#replcFileNmId textarea').each((i,v)=>{
+\tvar s = $('#nttSj').val();
+\t$(v).val(s.endsWith("사진") ? s + (i+1) : s +' 사진'+(i+1));
+});
+setTimeout(function(){
+    $('.nttUpdate ').click();
+}, 0);`);
+    });
+
+    $('#btnFunc9_4').click(function () {
+        copy(`async function search(urls, date) {
+urls = urls.replaceAll('http://', 'https://').split('\\n');
+date = new Date(date);
+let result = '';
+for (const [urlIdx, url] of urls.entries()) {
+    console.log(url + ' 조회 ' + '('+(urlIdx+1) + ', ' + urls.length + ')');
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('문제가 발생했습니다: '+response.status);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const test = doc.querySelector('#myTable');
+        const test2 = doc.querySelector('.photo_list');
+        const test3 = doc.querySelector('.photo_list2');
+        let elems = null;
+
+        if(test){
+            const th = doc.querySelectorAll('#subContent #myTable thead > tr > th');
+            let idx = 0;
+            for(let i in th){
+                if(th[i].innerText.includes('등록일')){
+                    idx = Number(i)+1;
+                    break;
+                }
+            }
+            elems = doc.querySelectorAll('#subContent #myTable tr > td:nth-child('+idx+')');
+        } else if(test2){
+            elems = doc.querySelectorAll('#subContent > div.subContent > div.photo_list > ul > li > a > p > span:nth-child(2)');
+        } else if(test3){
+            elems = doc.querySelectorAll('#subContent > div.subContent > div.photo_list2 > ul > li > a > dl > dd.date');
+        }
+
+        for(let v of elems){
+            const datePattern = /\\d{4}\\.\\d{2}\\.\\d{2}/;
+            const match = v.innerText.match(datePattern);
+            if (match) {
+                const curr = new Date(match[0]);
+                if(curr >= date){
+                    result += url+'\\n';
+                    break;
+                }
+            } else {
+                console.log(url + " : 날짜를 찾을 수 없습니다.");
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching '+url+' :', error);
+    }
+}
+console.log(result);
+}`);
+    });
+
     $('#btnFunc9_5').click(function () {
         copy(`console.log('----------------- img --------------------');
 $('.subContent img').each((i,v)=>console.log(v.alt));
@@ -356,405 +394,340 @@ console.log('----------------- a --------------------');
 $('.subContent a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`);
     });
 
-    // 전남 웹접근성 이미지 게시물 자동확인 및 입력
     $('#btnFunc9_6').click(function () {
         copy(`function mecro(mecroWin, targetUrl) {
 const interval = 2300;
+function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function navigateToUrl(url) { mecroWin.location.href = url; }
 
-// 페이지 이동 후 지정된 시간만 기다리기 위한 함수
-function wait(ms) {
-return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-// URL로 이동하는 함수
-function navigateToUrl(url) {
-mecroWin.location.href = url;
-}
-
-// 다음 URL을 생성하는 함수
 function getNextUrl() {
-const next = mecroWin.document.querySelector('#nttViewForm > ul > li.next > a');
-const nttSn = next ? next.dataset.param : '';
-const bbsId = mecroWin.document.querySelector('#bbsId').value;
-const mi = mecroWin.nttViewForm.mi.value;
-const sysId = mecroWin.search.sysId.value;
-
-return \`\${mecroWin.location.origin}/\${sysId}/na/ntt/selectNttInfo.do?mi=\${mi}&bbsId=\${bbsId}&nttSn=\${nttSn}\`;
+    const next = mecroWin.document.querySelector('#nttViewForm > ul > li.next > a');
+    const nttSn = next ? next.dataset.param : '';
+    const bbsId = mecroWin.document.querySelector('#bbsId').value;
+    const mi = mecroWin.nttViewForm.mi.value;
+    const sysId = mecroWin.search.sysId.value;
+    return \`\${mecroWin.location.origin}/\${sysId}/na/ntt/selectNttInfo.do?mi=\${mi}&bbsId=\${bbsId}&nttSn=\${nttSn}\`;
 }
 
-// 이미지 alt 속성을 수집하는 함수
 function collectImageAlts() {
-const imgs = mecroWin.document.querySelectorAll('#nttViewForm img');
-const alts = Array.from(imgs).map(img => img.alt).filter(alt => alt);
-return { alts, hasEmptyAlt: alts.length !== imgs.length };
+    const imgs = mecroWin.document.querySelectorAll('#nttViewForm img');
+    const alts = Array.from(imgs).map(img => img.alt).filter(alt => alt);
+    return { alts, hasEmptyAlt: alts.length !== imgs.length };
 }
 
-// 내용을 업데이트하는 함수
 function updateContent(nttSj) {
-const areas = mecroWin.document.querySelectorAll('#replcFileNmId textarea');
-let i = 1;
-for (let area of areas) {
-    area.value = nttSj.endsWith('사진') ? \`\${nttSj}\${i}\` : \`\${nttSj} 사진\${i}\`;
-    i++;
-}
-mecroWin.RAONKEDITOR.setEditorChangeMode('design', 'editor');
-if (mecroWin.RAONKEDITOR.IsEmpty('editor')) {
-    mecroWin.RAONKEDITOR.SetHtmlContents('<p>.</p>', 'editor');
-}
+    const areas = mecroWin.document.querySelectorAll('#replcFileNmId textarea');
+    let i = 1;
+    for (let area of areas) {
+        area.value = nttSj.endsWith('사진') ? \`\${nttSj}\${i}\` : \`\${nttSj} 사진\${i}\`;
+        i++;
+    }
+    mecroWin.RAONKEDITOR.setEditorChangeMode('design', 'editor');
+    if (mecroWin.RAONKEDITOR.IsEmpty('editor')) {
+        mecroWin.RAONKEDITOR.SetHtmlContents('<p>.</p>', 'editor');
+    }
 }
 
-// 페이지를 처리하는 메인 함수
 async function processPage(url) {
-navigateToUrl(url);
-await wait(interval);
-
-const { alts, hasEmptyAlt } = collectImageAlts();
-console.log(alts.join('\\n------------------\\n'));
-
-if (hasEmptyAlt || mecroWin.confirm('수정 합니까?')) {
-    mecroWin.document.querySelector('.nttUpdatePage').click();
-    await wait(interval);
-
-    const nttSj = mecroWin.document.querySelector('#nttSj').value;
-    updateContent(nttSj);
-    mecroWin.document.querySelector('.nttUpdate').focus();
-    await wait(10);
-
-    mecroWin.document.querySelector('.nttUpdate').click();
-    await wait(interval);
-
     navigateToUrl(url);
     await wait(interval);
 
-    const { alts } = collectImageAlts();
+    const { alts, hasEmptyAlt } = collectImageAlts();
     console.log(alts.join('\\n------------------\\n'));
-    if (!mecroWin.document.querySelector('#nttViewForm > ul > li.next > a')) {
-        mecroWin.alert('끝');
-    }
-    else if (mecroWin.confirm('다음?')) {
-        processPage(getNextUrl());
-    }
-} else {
-    if (!mecroWin.document.querySelector('#nttViewForm > ul > li.next > a')) {
-        mecroWin.alert('끝');
-    } else {
-        processPage(getNextUrl());
-    }
-}
-}
 
+    if (hasEmptyAlt || mecroWin.confirm('수정 합니까?')) {
+        mecroWin.document.querySelector('.nttUpdatePage').click();
+        await wait(interval);
+
+        const nttSj = mecroWin.document.querySelector('#nttSj').value;
+        updateContent(nttSj);
+        mecroWin.document.querySelector('.nttUpdate').focus();
+        await wait(10);
+
+        mecroWin.document.querySelector('.nttUpdate').click();
+        await wait(interval);
+
+        navigateToUrl(url);
+        await wait(interval);
+
+        const { alts } = collectImageAlts();
+        console.log(alts.join('\\n------------------\\n'));
+        if (!mecroWin.document.querySelector('#nttViewForm > ul > li.next > a')) {
+            mecroWin.alert('끝');
+        } else if (mecroWin.confirm('다음?')) {
+            processPage(getNextUrl());
+        }
+    } else {
+        if (!mecroWin.document.querySelector('#nttViewForm > ul > li.next > a')) {
+            mecroWin.alert('끝');
+        } else {
+            processPage(getNextUrl());
+        }
+    }
+}
 processPage(targetUrl);
 }
-
 mecro(window.open(), location.href);`);
     });
-    
-    // 전남 한페이지 게시물 확인
-    $('#btnFunc9_7').click(function(){
+
+    $('#btnFunc9_7').click(function () {
         copy(getSelectTcoString('#myTable tbody .bbs_tit a', '#nttViewForm img', '#nttViewForm > div > div.bbsV_cont table', '#nttViewForm > div > div.bbsV_cont a[target]:not([target=""])'));
     });
 
-    // 대전대 콘텐츠 확인
-    $('#btnFunc9_8').click(function(){
+    $('#btnFunc9_8').click(function () {
         copy(`console.log('----------------- img --------------------');
-            $('.subCntBody  img').each((i,v)=>console.log(v.alt));
-            console.log('----------------- table --------------------');
-            if($('.subCntBody table caption').length != $('.subCntBody table').length) console.log('caption 없는 테이블 존재');
-            $('.subCntBody table caption').each((i,v)=>console.log(v.innerText));
-            console.log('----------------- a --------------------');
-            $('.subCntBody a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`.replace(/ {2,}/g, ''));
+$('.subCntBody  img').each((i,v)=>console.log(v.alt));
+console.log('----------------- table --------------------');
+if($('.subCntBody table caption').length != $('.subCntBody table').length) console.log('caption 없는 테이블 존재');
+$('.subCntBody table caption').each((i,v)=>console.log(v.innerText));
+console.log('----------------- a --------------------');
+$('.subCntBody a').each((i,v)=>console.log(v.innerText+ ' ['+v.target+'] : ' + v.title));`);
     });
 
-    // 대전대 한페이지 게시물 확인
-    $('#btnFunc9_9').click(function(){
+    $('#btnFunc9_9').click(function () {
         copy(getSelectTcoString('.BD_list tbody a.nttInfoBtn', '#nttViewForm table .Cnts img', '#nttViewForm table .Cnts table', '#nttViewForm table .Cnts a[target]:not([target=""])'));
     });
 
-    $('#btnFunc9_10').click(function(){
-       copy(`function extractTableData(selector) {
+    $('#btnFunc9_10').click(function () {
+        copy(`function extractTableData(selector) {
     const table = document.querySelector(selector);
     if (!table) {
         console.error("테이블을 찾을 수 없습니다.");
         return;
     }
-
     let result = [];
-
-    // 모든 th 요소 추출
-    const headers = table.getElementsByTagName("th");
-    for (let th of headers) {
-        result.push(th.innerText);
-    }
-
-    // 모든 td 요소 추출
-    const cells = table.getElementsByTagName("td");
-    for (let td of cells) {
-        result.push(td.innerText);
-    }
-
-    // 내용을 \\n으로 구분하여 출력
-    const output = result.join("\\n");
-    console.log(output);
+    for (let th of table.getElementsByTagName("th")) { result.push(th.innerText); }
+    for (let td of table.getElementsByTagName("td")) { result.push(td.innerText); }
+    console.log(result.join("\\n"));
 }
-
-// 함수 호출 예시
-extractTableData("");`); 
+extractTableData("");`);
     });
 
-    // 두 테이블의 순서 맞추기
-    var fn10_tb1ValArr = [];
-    var fn10_tb2ValArr = [];
-    var fn10_maxY = 0;
-    var fn10_maxX = 0;
-    // 컬럼 추가
+    // Func 10: 두 테이블 순서 맞추기
+    let fn10_tb1ValArr = [];
+    let fn10_tb2ValArr = [];
+    let fn10_maxY = 0;
+    let fn10_maxX = 0;
+
     $('#btnFunc10_1').click(function () {
-        if ($('#tbFunc10_1 thead th').length == 0) {
-            $('#tbFunc10_1 thead').append(getElem('th|textarea', '', 'class="chk"|'));
-            $('#tbFunc10_2 thead').append(getElem('th|textarea', '', 'class="chk"|'));
-        }
-        else {
-            $('#tbFunc10_1 thead').append(getElem('th|textarea', '', 'class="val"|'));
-            $('#tbFunc10_2 thead').append(getElem('th|textarea', '', 'class="val"|'));
-        }
+        const isFirst = $('#tbFunc10_1 thead th').length === 0;
+        const cls = isFirst ? 'class="chk"|' : 'class="val"|';
+        $('#tbFunc10_1 thead').append(getElem('th|textarea', '', cls));
+        $('#tbFunc10_2 thead').append(getElem('th|textarea', '', cls));
     });
-    // 두 테이블의 순서 맞추기 실행
+
     $('#btnFunc10_2').click(function () {
-        if (fn10_tb1ValArr[0] == undefined || fn10_tb1ValArr[0].length == 0) {
+        if (!fn10_tb1ValArr[0] || fn10_tb1ValArr[0].length === 0) {
             alert('테이블 값이 없음');
             return;
         }
 
         function rearrangeArrays(arr1, arr2) {
-            var keyArr = arr2[0];
-            var dataMap = {};
-            for (var y = 0; y < keyArr.length; y++) {
-                var data = [];
-                for (var x = 1; x < arr2.length; x++) {
+            const keyArr = arr2[0];
+            const dataMap = {};
+            for (let y = 0; y < keyArr.length; y++) {
+                const data = [];
+                for (let x = 1; x < arr2.length; x++) {
                     data.push(arr2[x][y]);
                 }
                 dataMap[keyArr[y]] = data.join('|^|');
             }
 
             const resultArr2 = [];
-
             const row1 = arr1[0];
-            const row2 = arr2[0];
+            const row2 = [...arr2[0]];
 
-            // 결과 배열 초기화
-            const newRow1 = [...row1, '']; // arr1의 원소와 빈값 추가
-            const newRow2 = new Array(row1.length + 1).fill(''); // arr2의 빈 배열 초기화
+            const newRow2 = new Array(row1.length + 1).fill('');
+            let row2Index = 0;
 
-            let row2Index = 0; // row2의 인덱스
-
-            // arr1 기준으로 arr2의 순서 변경
             row1.forEach(item => {
                 const indexInRow2 = row2.indexOf(item);
                 if (indexInRow2 !== -1) {
-                    newRow2[row2Index++] = item; // arr2에 item 추가
-                    row2[indexInRow2] = null; // 이미 추가한 item은 null로 변경
+                    newRow2[row2Index++] = item;
+                    row2[indexInRow2] = null;
                 } else {
-                    newRow2[row2Index++] = ''; // arr1에만 있는 값은 빈값 추가
+                    newRow2[row2Index++] = '';
                 }
             });
 
-            // arr2의 남은 값은 맨 뒤로 이동
             row2.forEach(item => {
-                if (item !== null) {
-                    newRow2[row2Index++] = item; // 남은 값 추가
-                }
+                if (item !== null) newRow2[row2Index++] = item;
             });
 
-            resultArr2.push(newRow2); // 결과 arr2에 추가
+            resultArr2.push(newRow2);
 
             const cnt = arr2.length - 1;
-            const dataArr = [];
-            for (var i = 0; i < cnt; i++) {
-                dataArr.push([]);
-            }
+            const dataArr = Array.from({ length: cnt }, () => []);
+
             newRow2.forEach(v => {
-                if (v == '') {
-                    for (var i = 0; i < cnt; i++) {
-                        dataArr[i].push(v);
-                    }
-                }
-                else {
-                    var data = dataMap[v].split('|^|');
-                    for (var i = 0; i < cnt; i++) {
-                        dataArr[i].push(data[i]);
-                    }
+                if (v === '') {
+                    for (let i = 0; i < cnt; i++) dataArr[i].push('');
+                } else {
+                    const data = dataMap[v].split('|^|');
+                    for (let i = 0; i < cnt; i++) dataArr[i].push(data[i]);
                 }
             });
-            for (var i = 0; i < cnt; i++) {
-                resultArr2.push(dataArr[i]);
-            }
 
+            for (let i = 0; i < cnt; i++) resultArr2.push(dataArr[i]);
             return [arr1, resultArr2];
         }
 
-        var [newArr1, newArr2] = rearrangeArrays(fn10_tb1ValArr, fn10_tb2ValArr);
+        const [newArr1, newArr2] = rearrangeArrays(fn10_tb1ValArr, fn10_tb2ValArr);
         fn10_tb1ValArr = newArr1;
         fn10_tb2ValArr = newArr2;
-        fn10_maxY = fn10_maxY < fn10_tb1ValArr[0].length ? fn10_tb1ValArr[0].length : fn10_maxY;
-        fn10_maxY = fn10_maxY < fn10_tb2ValArr[0].length ? fn10_tb2ValArr[0].length : fn10_maxY;
-        fn10_maxX = fn10_tb1ValArr.length > fn10_tb2ValArr.length ? fn10_tb1ValArr.length : fn10_tb2ValArr.length;
+
+        fn10_maxY = Math.max(fn10_tb1ValArr[0].length, fn10_tb2ValArr[0].length);
+        fn10_maxX = Math.max(fn10_tb1ValArr.length, fn10_tb2ValArr.length);
+
         printFn10();
         showPopup();
     });
-    // 입력 감시해서 테이블 출력
+
     $('#tbFunc10_1, #tbFunc10_2').on('change', 'thead textarea', function () {
         fn10_tb1ValArr = [];
         fn10_tb2ValArr = [];
         fn10_maxY = 0;
-        fn10_maxX = 0;
 
-        $('#tbFunc10_1 thead textarea').each((i, v) => {
-            var arr = $(v).val().split('\n');
+        $('#tbFunc10_1 thead textarea').each((_, v) => {
+            const arr = $(v).val().split('\n');
             fn10_tb1ValArr.push(arr);
-            fn10_maxY = fn10_maxY < arr.length ? arr.length : fn10_maxY;
+            fn10_maxY = Math.max(fn10_maxY, arr.length);
         });
-        $('#tbFunc10_2 thead textarea').each((i, v) => {
-            var arr = $(v).val().split('\n');
+        $('#tbFunc10_2 thead textarea').each((_, v) => {
+            const arr = $(v).val().split('\n');
             fn10_tb2ValArr.push(arr);
-            fn10_maxY = fn10_maxY < arr.length ? arr.length : fn10_maxY;
+            fn10_maxY = Math.max(fn10_maxY, arr.length);
         });
-        fn10_maxX = fn10_tb1ValArr.length > fn10_tb2ValArr.length ? fn10_tb1ValArr.length : fn10_tb2ValArr.length;
+        fn10_maxX = Math.max(fn10_tb1ValArr.length, fn10_tb2ValArr.length);
 
         printFn10();
     });
-    // 데이터 엑셀이 붙여넣기 할 수 있게 복사하기, 
+
     $('#btnFunc10_3').click(function () {
-        var result = '';
+        let result = '';
         for (let y = 0; y < fn10_maxY; y++) {
-            var result1 = '';
-            var result2 = '';
+            let result1 = '';
+            let result2 = '';
             for (let x = 0; x < fn10_maxX; x++) {
-                var v1 = fn10_tb1ValArr[x] ? fn10_tb1ValArr[x][y] : '';
-                result1 += v1 + '\t';
-                var v2 = fn10_tb2ValArr[x] ? fn10_tb2ValArr[x][y] : '';
-                result2 += v2 + '\t';
+                result1 += (fn10_tb1ValArr[x]?.[y] || '') + '\t';
+                result2 += (fn10_tb2ValArr[x]?.[y] || '') + '\t';
             }
             result += result1 + '\t' + result2 + '\n';
         }
-        result = result.replaceAll('undefined', '');
         copy(result);
     });
-    // 테이블 출력
+
     function printFn10() {
-        var tbody1 = $('#tbFunc10_1 tbody');
-        var tbody2 = $('#tbFunc10_2 tbody');
-        tbody1.empty();
-        tbody2.empty();
+        const $tbody1 =$('#tbFunc10_1 tbody').empty();
+        const $tbody2 =$('#tbFunc10_2 tbody').empty();
 
         for (let y = 0; y < fn10_maxY; y++) {
-            var result1 = '';
-            var result2 = '';
+            let result1 = '';
+            let result2 = '';
             for (let x = 0; x < fn10_maxX; x++) {
-                var v1 = fn10_tb1ValArr[x] ? fn10_tb1ValArr[x][y] : '';
-                result1 += getElem('td', v1);
-                var v2 = fn10_tb2ValArr[x] ? fn10_tb2ValArr[x][y] : '';
-                result2 += getElem('td', v2);
+                result1 += getElem('td', fn10_tb1ValArr[x]?.[y] || '');
+                result2 += getElem('td', fn10_tb2ValArr[x]?.[y] || '');
             }
-            tbody1.append(getElem('tr', result1.replaceAll('undefined', '')));
-            tbody2.append(getElem('tr', result2.replaceAll('undefined', '')));
+            $tbody1.append(getElem('tr', result1));$tbody2.append(getElem('tr', result2));
         }
     }
 
-    // 문자열 반복 생성
-    // 데이터 한번에 입력
+    // Func 11: 문자열 반복 생성
     $('#tbFunc11').on('paste', '.cpyEvent', function (event) {
-        var pastedData = (event.originalEvent || event).clipboardData.getData('text');
-        if (!pastedData.includes('\t')) {
-            return;
-        }
+        let pastedData = (event.originalEvent || event).clipboardData.getData('text');
+        if (!pastedData.includes('\t')) return;
+
         pastedData = pastedData.trim();
-        var list = pastedData.split('\n');
-        var ta = $('#tbFunc11 tbody tr textarea');
-        ta.val('');
+        const list = pastedData.split('\n');
+        const ta = $('#tbFunc11 tbody tr textarea').val('');
 
         list.forEach(v => {
-            var tmp = v.replaceAll('\r', '').split('\t');
-            for (var i = 0; i < tmp.length; i++) {
+            const tmp = v.replaceAll('\r', '').split('\t');
+            tmp.forEach((val, i) => {
                 if (ta[i]) {
-                    ta[i].value += (ta[i].value == '' ? tmp[i] : '\n' + tmp[i]);
+                    ta[i].value += (ta[i].value === '' ? val : '\n' + val);
                 }
-            }
+            });
         });
         event.preventDefault();
     });
-    // 데이터 추가
+
     $('#btnFunc11_1').click(function () {
-        var id = $('#tbFunc11 thead th').length;
+        const id = $('#tbFunc11 thead th').length;
         $('#tbFunc11 thead tr').append(getElem('th|input', `^${id}^`, `|type="checkbox" title="같은 값 사용(데이터 1개만 입력)"`));
         $('#tbFunc11 tbody tr').append(getElem('td|textarea', '', `|data-id="^${id}^" class="cpyEvent"`));
     });
-    // 문자열 반복 생성 실행
-    $('#btnFunc11_2').click(function () {
-        var area = $('#tbFunc11 tbody tr td textarea');
-        var chk = $('#tbFunc11 thead tr th input[type="checkbox"]');
-        const query = $('#taFunc11').val();
-        var result = '';
-        var data = [];
-        var cnt = 0;
 
-        area.each((i, v) => {
-            var list = $(v).val().split('\n');
-            cnt = cnt < list.length ? list.length : cnt;
+    $('#btnFunc11_2').click(function () {
+        const area = $('#tbFunc11 tbody tr td textarea');
+        const chk = $('#tbFunc11 thead tr th input[type="checkbox"]');
+        const query = $('#taFunc11').val();
+
+        let result = '';
+        const data = [];
+        let cnt = 0;
+
+        area.each((_, v) => {
+            const list = $(v).val().split('\n');
+            cnt = Math.max(cnt, list.length);
             data.push(list);
         });
 
-        for (var i = 0; i < cnt; i++) {
-            var q = query;
-            for (var j = 0; j < data.length; j++) {
-                var d = data[j][i];
+        for (let i = 0; i < cnt; i++) {
+            let q = query;
+            for (let j = 0; j < data.length; j++) {
+                const targetId = area[j].dataset.id;
+                const d = data[j][i];
+
                 if (chk[j].checked) {
-                    q = q.replaceAll(area[j].dataset.id, data[j][0]);
-                }
-                else if (d) {
-                    q = q.replaceAll(area[j].dataset.id, d);
-                }
-                else {
-                    q = q.replaceAll(area[j].dataset.id, '데이터가 없음');
+                    q = q.replaceAll(targetId, data[j][0]);
+                } else if (d) {
+                    q = q.replaceAll(targetId, d);
+                } else {
+                    q = q.replaceAll(targetId, '데이터가 없음');
                 }
             }
             result += q + '\n';
         }
-
         copy(result);
     });
-    // 문자 변환
+
+    // Func 12: 문자 변환 (정규식/특수문자 패치)
     $('#btnFunc12').click(function () {
-        var before = $('#inFunc12_1').val();
-        var after = $('#inFunc12_2').val();
+        let before = $('#inFunc12_1').val();
+        let after = $('#inFunc12_2').val();
 
-        if($('#chkFunc12').is(':checked')) {
+        const parseEscape = str => str.replace(/(?<!\\)\\n/g, '\n')
+            .replace(/\\\\n/g, '\\n')
+            .replace(/(?<!\\)\\t/g, '\t')
+            .replace(/\\\\t/g, '\\t');
+
+        if ($('#chkFunc12').is(':checked')) {
             before = new RegExp(before, 'g');
-            after = after.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
-        }
-        else{
-            before = before.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
-            after = after.replace(/(?<!\\)\\n/g, '\n').replace(/\\\\n/g, '\\n').replace(/(?<!\\)\\t/g, '\t').replace(/\\\\t/g, '\\t');
+            after = parseEscape(after);
+        } else {
+            before = parseEscape(before);
+            after = parseEscape(after);
         }
 
-        var result = $('#taFunc12').val().replaceAll(before, after);
+        const result = $('#taFunc12').val().replaceAll(before, after);
         copy(result);
         $('#taFunc12').val(result);
     });
-    // 날짜 변환(대전대 학사일정 한글파일 포맷을 수정)
+
+    // Func 13: 날짜 변환
     $('#btnFunc13').click(function () {
         const year = $('#inFunc13').val();
-    
-        var result = $('#taFunc13').val().replaceAll(' ', '').replaceAll('\n\n', '\n').trim().split('\n').map(line => {
-            // MM.DD 형식 캡처 (연도 없는 형태에 최적화)
-            const dateRegex = /(\d{1,2})[.,\/-](\d{1,2})\.?/;
-            
+        const dateRegex = /(\d{1,2})[.,\/-](\d{1,2})\.?/;
+
+        const result = $('#taFunc13').val().replaceAll(' ', '').replaceAll('\n\n', '\n').trim().split('\n').map(line => {
             const match = line.match(dateRegex);
             if (match) {
                 const month = match[1].padStart(2, '0');
                 const day = match[2].padStart(2, '0');
                 const date = `${year}/${month}/${day}`;
-    
+
                 if (line.includes('~')) {
-                    // '~' 이후의 MM.DD 형식 캡처
                     const endMatch = line.slice(line.indexOf('~')).match(dateRegex);
                     if (endMatch) {
                         const endMonth = endMatch[1].padStart(2, '0');
@@ -766,192 +739,166 @@ extractTableData("");`);
             }
             return line;
         }).join('\n');
-    
+
         copy(result);
         $('#taFunc13').val(result);
     });
-    // svn 파일 경로를 운영 서버 경로로 수정
+
+    // Func 14: SVN 경로 -> 운영 서버 경로 변환
     $('#btnFunc14').click(function () {
-        var data = $('#taFunc14').val().split('\n');
-        data = data.map(v => {
+        const lines = $('#taFunc14').val().split('\n');
+        const data = lines.map(v => {
             v = v.replaceAll('\\', '/');
-            var result = '';
-            if(v.substring(v.lastIndexOf('.'), v.length) == '.java'){
-                // 자바 파일
-                result = '/webapp/WEB-INF/classes'+v.substring(v.indexOf('/egovframework'), v.lastIndexOf('.'))+'.class';
+            let result = '';
+            const ext = v.substring(v.lastIndexOf('.'));
+
+            if (ext === '.java') {
+                result = '/webapp/WEB-INF/classes' + v.substring(v.indexOf('/egovframework'), v.lastIndexOf('.')) + '.class';
+            } else if (ext === '.xml') {
+                result = '/webapp/WEB-INF/classes' + v.substring(v.indexOf('/egovframework'));
+            } else {
+                result = v.substring(v.indexOf('/webapp/'));
             }
-            else if(v.substring(v.lastIndexOf('.'), v.length) == '.xml'){
-                // mapper 파일
-                result = '/webapp/WEB-INF/classes'+v.substring(v.indexOf('/egovframework'), v.length);
-            }
-            else{
-                // jsp 파일
-                result = v.substring(v.indexOf('/webapp/'), v.length);
-            }
-            if(v.indexOf('D ') == 0){
+
+            if (v.startsWith('D ')) {
                 result = '-' + result;
             }
             return result;
         });
-        $('#taFunc14').val(data.join('\n'));
-        copy($('#taFunc14').val());
+
+        const output = data.join('\n');
+        $('#taFunc14').val(output);
+        copy(output);
     });
 
-    // 목록 정렬
+    // Func 15: 목록 정렬
     $('#btnFunc15').click(function () {
-        var data = $('#taFunc15').val().split('\n');
-        // 숫자 문자
-        var type1 = $('#selFunc15_1').val();
-        // 오름차 내림차
-        var type2 = $('#selFunc15_2').val();
+        let data = $('#taFunc15').val().split('\n');
+        const type1 = $('#selFunc15_1').val();
+        const type2 = $('#selFunc15_2').val();
 
-        if(type1 == 'char'){
-            if(type2 == 'asc'){
-                data.sort();
-            }
-            else if(type2 == 'desc'){
-                data.sort().reverse();
-            }
+        if (type1 === 'char') {
+            data.sort();
+            if (type2 === 'desc') data.reverse();
+        } else if (type1 === 'num') {
+            const charArr = data.filter(v => !/^\d+/.test(v));
+            const numArr = data.filter(v => /^\d+/.test(v));
+
+            const sortFn = (a, b) => {
+                const numA = parseInt(a.match(/^\d+/)?.[0]) || Infinity;
+                const numB = parseInt(b.match(/^\d+/)?.[0]) || Infinity;
+                if (numA === numB) {
+                    return type2 === 'asc' ? a.localeCompare(b) : b.localeCompare(a);
+                }
+                return type2 === 'asc' ? numA - numB : numB - numA;
+            };
+
+            numArr.sort(sortFn);
+            charArr.sort();
+            if (type2 === 'desc') charArr.reverse();
+
+            data = numArr.concat(charArr);
         }
-        else if(type1 == 'num'){
-            var charArr = data.filter(v => {
-                const match = v.match(/^\d+/);
-                return match ? false : true;
-            });
-            var numArr = data.filter(v => {
-                const match = v.match(/^\d+/);
-                return match ? true : false;
-            });
-            if(type2 == 'asc'){
-                numArr.sort((a, b) => {
-                    const numA = parseInt(a.match(/^\d+/)?.[0]) || Infinity; // 앞의 숫자 추출
-                    const numB = parseInt(b.match(/^\d+/)?.[0]) || Infinity; // 앞의 숫자 추출
 
-                    if (numA === numB) {
-                        return a.localeCompare(b); // 숫자가 같으면 문자열 순으로 정렬
-                    }
-                    return numA - numB; // 숫자 순으로 정렬
-                });
-                charArr.sort();
-                data = numArr.concat(charArr);
-            }
-            else if(type2 == 'desc'){
-                numArr.sort((a, b) => {
-                    const numA = parseInt(a.match(/^\d+/)?.[0]) || Infinity; // 앞의 숫자 추출
-                    const numB = parseInt(b.match(/^\d+/)?.[0]) || Infinity; // 앞의 숫자 추출
-
-                    if (numA === numB) {
-                        return b.localeCompare(a); // 숫자가 같으면 문자열 순으로 정렬
-                    }
-                    return numB - numA; // 숫자 순으로 정렬
-                });
-                charArr.sort().reverse();
-                data = numArr.concat(charArr);
-            }
-        }
-        
-        $('#taFunc15').val(data.join('\n'));
-        copy($('#taFunc15').val());
+        const output = data.join('\n');
+        $('#taFunc15').val(output);
+        copy(output);
     });
 
-    // 목록 개수 구하기
+    // Func 16: 목록 개수 구하기
     $('#btnFunc16').click(function () {
         $('#pFunc16').text($('#taFunc16').val().split('\n').length + '개');
         showPopup();
     });
 
-    // 앞에 붙은 숫자 채우기
+    // Func 17: 앞에 붙은 숫자 채우기 (Pad)
     $('#btnFunc17').click(function () {
-        var data = $('#taFunc17').val().split('\n');
-        var type = $('[name="rdFunc17"]:checked').val();
-        var len = $('#inpFunc17_1').val();
-        var char = $('#inpFunc17_2').val();
-        data = data.map(v => {
-            var num = v.match(/^\d+/)?.[0];
-            v = v.replace(/^\d+/, '');
-            if(num != undefined){
-                if(type == 'left'){
-                    return num.padStart(len, char)+v;
-                }
-                else if(type == 'right'){
-                    return num.padEnd(len, char)+v;
-                }
+        const lines = $('#taFunc17').val().split('\n');
+        const type = $('[name="rdFunc17"]:checked').val();
+        const len = Number($('#inpFunc17_1').val());
+        const padChar = $('#inpFunc17_2').val();
+
+        const data = lines.map(v => {
+            const num = v.match(/^\d+/)?.[0];
+            const text = v.replace(/^\d+/, '');
+
+            if (num !== undefined) {
+                return type === 'left' ? num.padStart(len, padChar) + text : num.padEnd(len, padChar) + text;
             }
-            else{
-                return v;
-            }
+            return v;
         });
-        $('#taFunc17').val(data.join('\n'));
-        copy($('#taFunc17').val());
+
+        const output = data.join('\n');
+        $('#taFunc17').val(output);
+        copy(output);
     });
 
-    // 폴더 생성 배치 명령어 생성
-    $('#btnFunc18').click(function(){
-        var path = $('#inFunc18_1').val().trim();
-        if(path){
+    // Func 18: 폴더 생성 배치 명령어 생성
+    $('#btnFunc18').click(function () {
+        let path = $('#inFunc18_1').val().trim();
+        if (path) {
             path = path.replaceAll('/', '\\') + '\\';
             path = path.replaceAll('\\\\', '\\');
         }
-        const data = $('#taFunc18').val().split('\n').map(v => {
-            return 'mkdir ' + path + v.replaceAll('/', '\\') + ' \\p';
-        });
-        var result = '@echo off\n'+data.join('\n');
+
+        const data = $('#taFunc18').val().split('\n').map(v => `mkdir ${path}${v.replaceAll('/', '\\')} \\p`);
+        const result = '@echo off\n' + data.join('\n');
+
         $('#taFunc18').val(result);
-        copy($('#taFunc18').val());
+        copy(result);
     });
 
-    // 문자 추출
-    $('#btnFunc19').click(function(){
+    // Func 19: 문자 추출 (정규식 파싱)
+    $('#btnFunc19').click(function () {
         const data = $('#taFunc19_1').val();
         const start = $('#inFunc19_1').val();
         const end = $('#inFunc19_2').val();
-        let regex = new RegExp(start + '(.*?)' + end, 'g');
-        let matches = [];
+
+        const regex = new RegExp(start + '(.*?)' + end, 'g');
+        const matches = [];
         let match;
-        
+
         while ((match = regex.exec(data)) !== null) {
-            matches.push(match[1].trim()); // 시작과 끝 문자열 사이의 내용 추가
+            matches.push(match[1].trim());
         }
 
-        // 결과 출력
-        if(matches.length > 0){
-            $('#taFunc19_2').val(matches.join('\n'));
-            copy($('#taFunc19_2').val());
-        }
-        else{
+        if (matches.length > 0) {
+            const output = matches.join('\n');
+            $('#taFunc19_2').val(output);
+            copy(output);
+        } else {
             $('#taFunc19_2').val("일치하는 값이 없습니다.");
         }
     });
 
-    // 숫자 생성
-    $('#btnFunc20').click(function(){
+    // Func 20: 연속 숫자 생성
+    $('#btnFunc20').click(function () {
         const start = Number($('#inFunc20_1').val());
         const end = Number($('#inFunc20_2').val());
-        let result = '';
-        for(let i = start; i <= end; i++){
-            result += i + '\n';
+        const result = [];
+
+        for (let i = start; i <= end; i++) {
+            result.push(i);
         }
-        copy(result);
+        copy(result.join('\n') + '\n');
     });
 
-    // CRUD Mapper 생성기
-    $('#btnFunc21_1, #btnFunc21_2').click(function(){
-        var readFile = null;
-        if($(this).attr('id') == 'btnFunc21_1'){
-            readFile = $('#fileFunc21_1')[0].files[0];
-        }
-        else if($(this).attr('id') == 'btnFunc21_2'){
-            readFile = $('#fileFunc21_2')[0].files[0];
-        }
-        
-        if(readFile){
-            const reader = new FileReader();
+    // Func 21: CRUD Mapper 생성기
+    $('#btnFunc21_1, #btnFunc21_2').click(function () {
+        const isFirst = $(this).attr('id') === 'btnFunc21_1';
+        const readFile = isFirst ? $('#fileFunc21_1')[0].files[0] : $('#fileFunc21_2')[0].files[0];
 
-          reader.onload = function(e) {
+        if (!readFile) {
+            alert('파일 먼저 선택');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
             const fileContent = e.target.result;
             const namespace = $('#inFunc21_1').val();
             const keyword = $('#inFunc21_2').val();
-            const keyword2 = keyword.replace(/^./, match => match.toLowerCase());
+            const keyword2 = keyword.replace(/^./, m => m.toLowerCase());
             const tableName = $('#inFunc21_3').val();
             const alias = $('#inFunc21_4').val();
             const aliasUpper = alias.toUpperCase();
@@ -960,126 +907,83 @@ extractTableData("");`);
             const dataName = $('#inFunc21_6').val();
             const path = $('#inFunc21_7').val();
             const columns = $('#taFunc21_1').val().split('\n');
-            let selectColumns = '';
-            let insertColumns = '';
-            let insertColumns2 = '';
-            let updateColumns = '';
 
-            for(let i = 0; i < columns.length; i++){
-               const col = columns[i];
-               if(i != 0){
-                    selectColumns += '\t\t\t,';
-                    insertColumns += '\t\t\t,';
-                    insertColumns2 += '\t\t\t,';
-                    updateColumns += '\t\t\t,';
-               }
-               selectColumns += aliasUpper + '.' + col;
-               insertColumns += col;
-               insertColumns2 += `#{${toCamelCase(col)}}`;
-               updateColumns += `${col} = #{${toCamelCase(col)}}`;
-               if(i != columns.length - 1){
-                    selectColumns += '\n';
-                    insertColumns += '\n';
-                    insertColumns2 += '\n';
-                    updateColumns += '\n';
-               }
-            }
+            const selectColumns = columns.map((col, i) => `${i === 0 ? '' : '\t\t\t,'}${aliasUpper}.${col}`).join('\n');
+            const insertColumns = columns.map((col, i) => `${i === 0 ? '' : '\t\t\t,'}${col}`).join('\n');
+            const insertColumns2 = columns.map((col, i) => `${i === 0 ? '' : '\t\t\t,'}#{${toCamelCase(col)}}`).join('\n');
+            const updateColumns = columns.map((col, i) => `${i === 0 ? '' : '\t\t\t,'}${col} = #{${toCamelCase(col)}}`).join('\n');
 
-            let result = fileContent;
-            result = result.replaceAll('|NAMESPACE|', namespace);
-            result = result.replaceAll('|KEYWORD|', keyword);
-            result = result.replaceAll('|KEYWORD2|', keyword2);
-            result = result.replaceAll('|TABLE_NAME|', tableName);
-            result = result.replaceAll('|ALIAS_UPPER|', aliasUpper);
-            result = result.replaceAll('|ALIAS_LOWER|', aliasLower);
-            result = result.replaceAll('|ALIAS|', alias);
-            result = result.replaceAll('|P_KEY|', pKey);
-            result = result.replaceAll('|P_KEY_SNAKE|', toCamelCase(pKey));
-            result = result.replaceAll('|DATA_NAME|', dataName);
-            result = result.replaceAll('|PATH|', path);
-            result = result.replaceAll('|SELECT_COLUMNS|', selectColumns);
-            result = result.replaceAll('|INSERT_COLUMNS|', insertColumns);
-            result = result.replaceAll('|INSERT_COLUMNS2|', insertColumns2);
-            result = result.replaceAll('|UPDATE_COLUMNS|', updateColumns);
+            let result = fileContent
+                .replaceAll('|NAMESPACE|', namespace)
+                .replaceAll('|KEYWORD|', keyword)
+                .replaceAll('|KEYWORD2|', keyword2)
+                .replaceAll('|TABLE_NAME|', tableName)
+                .replaceAll('|ALIAS_UPPER|', aliasUpper)
+                .replaceAll('|ALIAS_LOWER|', aliasLower)
+                .replaceAll('|ALIAS|', alias)
+                .replaceAll('|P_KEY|', pKey)
+                .replaceAll('|P_KEY_SNAKE|', toCamelCase(pKey))
+                .replaceAll('|DATA_NAME|', dataName)
+                .replaceAll('|PATH|', path)
+                .replaceAll('|SELECT_COLUMNS|', selectColumns)
+                .replaceAll('|INSERT_COLUMNS|', insertColumns)
+                .replaceAll('|INSERT_COLUMNS2|', insertColumns2)
+                .replaceAll('|UPDATE_COLUMNS|', updateColumns);
 
             copy(result);
-          };
+        };
 
-          reader.onerror = function(e) {
-            console.error('파일 읽기 오류:', e);
-          };
-
-          reader.readAsText(readFile);
-        }
-        else{
-            alert('파일 먼저 선택');
-        }
+        reader.onerror = e => console.error('파일 읽기 오류:', e);
+        reader.readAsText(readFile);
     });
 
-    // URL에서 파라미터 추출
-    $('#btnFunc22').click(function(){
-        const urls = $('#taFunc22').val();
-        let result = [];
-        let keys = $('#inFunc22').val().split(',');
-        for(var url of urls.split('\n')){
-            const params = new URLSearchParams(url.split('?')[1]);
-            const temp = [];
-            for(const key of keys){
-                temp.push(params.get(key));
-            }
-            result.push(temp.join('\t'));
-        }
+    // Func 22: URL 파라미터 추출
+    $('#btnFunc22').click(function () {
+        const urls = $('#taFunc22').val().split('\n');
+        const keys = $('#inFunc22').val().split(',');
+
+        const result = urls.map(url => {
+            const params = new URLSearchParams(url.split('?')[1] || '');
+            return keys.map(key => params.get(key) || '').join('\t');
+        });
+
         copy(result.join('\n'));
     });
 
-    // 엑셀 텍스트 포함 여부 확인
-    $('#btnFunc23').click(function(){
+    // Func 23: 엑셀 VBA 스크립트 복사
+    $('#btnFunc23').click(function () {
         copy(`Sub HighlightCellsBasedOnList()
-    Dim list1Range As Range
-    Dim list2Range As Range
-    Dim cell As Range
-    Dim compareCell As Range
+    Dim list1Range As Range, list2Range As Range, cell As Range, compareCell As Range
     Dim found As Boolean
     
-    ' 두 목록의 범위 설정 (필요에 따라 변경)
-    Set list1Range = Range("A1:A100")  ' 1번 목록 범위 (필요에 따라 변경)
-    Set list2Range = Range("B1:B20")   ' 2번 목록 범위 (필요에 따라 변경)
+    Set list1Range = Range("A1:A100")
+    Set list2Range = Range("B1:B20")
     
-    Application.ScreenUpdating = False  ' 처리 속도 향상을 위해 화면 업데이트 비활성화
+    Application.ScreenUpdating = False
     
-    ' 1번 목록의 각 셀에 대해
     For Each cell In list1Range
         found = False
-        
-        ' 셀이 비어있지 않은 경우에만 검사
         If Not IsEmpty(cell.Value) Then
-            ' 2번 목록의 각 항목과 비교
             For Each compareCell In list2Range
-                ' 2번 목록의 셀이 비어있지 않은 경우에만 검사
                 If Not IsEmpty(compareCell.Value) Then
-                    ' 1번 목록 셀에 2번 목록의 문자열이 포함되어 있는지 확인
                     If InStr(1, cell.Value, compareCell.Value, vbTextCompare) > 0 Then
-                        cell.Interior.Color = RGB(255, 255, 0)  ' 노란색으로 변경
+                        cell.Interior.Color = RGB(255, 255, 0)
                         found = True
-                        Exit For  ' 일치하는 항목을 찾으면 더 이상 비교하지 않음
+                        Exit For
                     End If
                 End If
             Next compareCell
-            
-            ' 일치하는 항목이 없으면 셀 색상 제거 (선택적)
-            If Not found Then
-                cell.Interior.ColorIndex = xlNone
-            End If
+            If Not found Then cell.Interior.ColorIndex = xlNone
         End If
     Next cell
     
-    Application.ScreenUpdating = True  ' 화면 업데이트 다시 활성화
+    Application.ScreenUpdating = True
     MsgBox "완료되었습니다!", vbInformation
 End Sub`);
     });
 
-    // 대전대 회원 등록 쿼리
-    $('#btnFunc24').click(function(){
+    // Func 24: 회원 등록 SQL 쿼리 생성
+    $('#btnFunc24').click(function () {
         const seq = $('#inFunc24_1').val();
         const mberId = $('#inFunc24_2').val();
         const mberNm = $('#inFunc24_3').val();
@@ -1087,72 +991,45 @@ End Sub`);
         const deptNm = $('#inFunc24_5').val();
         const insttNm = $('#inFunc24_6').val();
         const insttCd = $('#inFunc24_7').val();
-        
-        let query = '';
-        query += `insert into tap_mm_mber_manage values(${seq}, '${mberId}', '${mberNm}', '==', null, null, null, 'cikey', 'certiKey', sysdate, null);\n`;
-        query += `insert into tap_mm_mber_ty values(${seq}, '${mberId}', 5, '${deptCd}', '${deptNm}', null, null, 'Y', '시스템', 'system', sysdate, 'S', '${insttNm}', '${insttCd}', 'S');`;
+
+        const query = [
+            `insert into tap_mm_mber_manage values(${seq}, '${mberId}', '${mberNm}', '==', null, null, null, 'cikey', 'certiKey', sysdate, null);`,
+            `insert into tap_mm_mber_ty values(${seq}, '${mberId}', 5, '${deptCd}', '${deptNm}', null, null, 'Y', '시스템', 'system', sysdate, 'S', '${insttNm}', '${insttCd}', 'S');`
+        ].join('\n');
 
         copy(query);
     });
 
-    // HTML 태그 생성
-    function getElem(teg, str, attr) {
-        var tags = teg.split('|');
-        var attrs = attr ? attr.split('|') : '';
-        if (str == undefined) {
-            str = '';
-        }
-
-        if (tags.length == 1) {
-            if (attr) {
-                return `<${teg} ${attr}>${str}</${teg}>`;
-            }
-            else {
-                return `<${teg}>${str}</${teg}>`;
-            }
-        }
-        else {
-            var result = '';
-            for (var i = 0; i < tags.length; i++) {
-                var a = attrs[i] ? ' ' + attrs[i] : '';
-                result += `<${tags[i]}${a}>`;
-            }
-            result += str;
-            for (var i = tags.length - 1; i >= 0; i--) {
-                result += `</${tags[i]}>`;
-            }
-
-            return result;
-        }
-    }
-    // 문자열 복사해서 클립보드에 넣기
-    function copy(str) {
-        if (str.slice(-1) == '\n') {
-            str = str.slice(0, -1);
-        }
-        const t = document.createElement("textarea");
-        document.body.appendChild(t);
-        t.value = str;
-        t.select();
-        document.execCommand('copy');
-        document.body.removeChild(t);
-        showPopup();
-        return str;
-    }
-    // 문자열 반복
-    function strMul(str, num) {
-        var r = '';
-        for (var i = 0; i < num; i++) {
-            r += str;
-        }
-        return r;
-    }
-    // 캬멜 케이스로 수정
-    function toCamelCase(str){
-        str = str.toLowerCase();
-        var result = str.replace(/_([a-z])/g, function (match, letter) {
-            return letter.toUpperCase();
+    // Func 25: 혜전대 정기정검 조회수 표
+    $('#btnFunc25').click(function(){
+        const data = $('#taFunc25').val();
+        const chunkSize = 17;
+        const parsedRows = data
+        .trim()
+        .split("\n")
+        .map(line => {
+            const cols = line.split("\t");
+            return [cols[1], cols[2]]; // [학과/페이지명, 숫자]
         });
-        return result;
-    }
+
+        // 2. 17개씩 묶어서 컬럼 그룹(열) 생성
+        const columns = [];
+        for (let i = 0; i < parsedRows.length; i += chunkSize) {
+            columns.push(parsedRows.slice(i, i + chunkSize));
+        }
+
+        // 3. 각 행(row) 순서대로 열 데이터들을 가로로 결합
+        const resultRows = [];
+        for (let r = 0; r < chunkSize; r++) {
+            const rowCells = [];
+            columns.forEach(col => {
+                if (col[r]) {
+                    rowCells.push(col[r][0], col[r][1]);
+                }
+            });
+            resultRows.push(rowCells.join("\t"));
+        }
+
+        copy(resultRows.join('\n'));
+    });
 });
