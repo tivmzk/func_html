@@ -91,30 +91,36 @@
 
 ## Step 5: script.js 수정
 
-`script.js`의 마지막 헬퍼 함수(`toCamelCase`) 정의 **바로 앞**에 클릭 핸들러를 추가한다.
+클릭 핸들러는 `script.js` 맨 끝의 `$(document).ready(function () { ... });` 블록 **안**, 마지막 핸들러(직전 Func) 뒤에 추가한다.
+`// Func N: 기능 제목` 주석을 핸들러 위에 붙이고, 들여쓰기는 스페이스 4칸을 쓴다.
 
 기본 핸들러 패턴:
 ```js
+// Func N: 기능 제목
 $('#btnFuncN').click(function () {
-    var val = $('#taFuncN').val();
+    const val = $('#taFuncN').val();
     if (!val.trim()) return;
 
-    var lines = val.split('\n');
-    var result = '';
+    const lines = val.split('\n');
+    let result = '';
 
     // 기능 로직
 
     $('#taFuncN').val(copy(result));
-    showPopup();
 });
 ```
+
+로직이 길거나 재사용할 만하면 핸들러 안에 쓰지 않고 별도 헬퍼 함수(예: `formatHtml`)로 분리한다.
+헬퍼 함수는 파일 상단의 공통 유틸리티 영역(`toCamelCase` 정의 바로 뒤)에 `/** 설명 */` 주석과 함께 추가하고, 핸들러에서는 그 함수를 호출만 한다.
 
 규칙:
 - 결과를 textarea에 다시 쓸 때는 `copy(result)`로 클립보드에도 복사한다
 - 입력이 비었으면 `if (!val.trim()) return;`으로 조기 반환한다
 - 줄 단위 처리는 `val.split('\n')`으로 배열화 후 처리한다
-- `showPopup()`은 `copy()` 호출 시 자동 실행되므로 별도 호출 불필요
+- `showPopup()`은 `copy()` 호출 시 자동 실행되므로 별도 호출하지 않는다
+- `copy()`는 끝의 줄바꿈 한 개를 제거한 문자열을 반환한다
 - 기존 헬퍼 함수 활용: `copy()`, `showPopup()`, `getElem()`, `toCamelCase()`, `strMul()`
+- 새 코드는 `const`/`let`을 쓴다 (`var` 지양)
 
 ## Step 6: 완료 보고
 

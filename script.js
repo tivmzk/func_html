@@ -66,6 +66,206 @@ function toCamelCase(str) {
 }
 
 /**
+ * HTML 정렬 (탭 들여쓰기, 태그는 속성이 길어도 한 줄 유지)
+ */
+function formatHtml(html) {
+    const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+    const INLINE = new Set(['a', 'abbr', 'b', 'br', 'button', 'code', 'del', 'em', 'font', 'i', 'img', 'input', 'ins', 'label', 'mark', 's', 'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'u', 'wbr']);
+    const RAW = new Set(['script', 'style', 'textarea', 'pre']);
+    const AUTO_CLOSE = { li: ['li'], dt: ['dt', 'dd'], dd: ['dt', 'dd'], td: ['td', 'th'], th: ['td', 'th'], tr: ['td', 'th', 'tr'], option: ['option'] };
+
+    // 태그 하나를 읽어 공백(줄바꿈 포함)을 한 칸으로 정리 (따옴표 안은 유지)
+    const scanTag = (start) => {
+        let out = '', quote = '', prev = '';
+        for (let i = start; i < html.length; i++) {
+            const ch = html[i];
+            if (quote) {
+                out += ch;
+                if (ch === quote) quote = '';
+            } else if (ch === '>') {
+                out += ch;
+                return { end: i + 1, text: out.replace(/ (\/?>)$/, '$1') };
+            } else if ((ch === '"' || ch === "'") && prev === '=') {
+                out += ch;
+                quote = ch;
+            } else if (/\s/.test(ch)) {
+                if (!out.endsWith(' ')) out += ' ';
+                continue;
+            } else {
+                out += ch;
+            }
+            prev = ch;
+        }
+        return null;
+    };
+
+    // 1. 파싱
+    const root = { children: [] };
+    const stack = [root];
+    const top = () => stack[stack.length - 1];
+    const tagRe = /<(\/?)([A-Za-z][^\s/>]*)/y;
+    let text = '';
+    let i = 0;
+    const flushText = () => {
+        if (text) top().children.push({ type: 'text', value: text });
+        text = '';
+    };
+
+    while (i < html.length) {
+        if (html[i] !== '<') {
+            let j = html.indexOf('<', i);
+            if (j < 0) j = html.length;
+            text += html.slice(i, j);
+            i = j;
+            continue;
+        }
+
+        if (html.startsWith('<!--', i) || html[i + 1] === '!' || html[i + 1] === '?') {
+            const isComment = html.startsWith('<!--', i);
+            let j = html.indexOf(isComment ? '-->' : '>', i);
+            j = j < 0 ? html.length : j + (isComment ? 3 : 1);
+            flushText();
+            top().children.push({ type: 'comment', value: html.slice(i, j) });
+            i = j;
+            continue;
+        }
+
+        tagRe.lastIndex = i;
+        const m = tagRe.exec(html);
+        const tag = m && scanTag(i);
+        if (!tag) {
+            text += '<';
+            i++;
+            continue;
+        }
+
+        flushText();
+        const name = m[2];
+        const lname = name.toLowerCase();
+        i = tag.end;
+
+        if (m[1]) {
+            for (let k = stack.length - 1; k > 0; k--) {
+                if (stack[k].lname === lname) {
+                    stack[k].closed = true;
+                    stack.length = k;
+                    break;
+                }
+            }
+            continue;
+        }
+
+        const autoClose = AUTO_CLOSE[lname] || [];
+        while (stack.length > 1 && autoClose.includes(top().lname)) stack.pop();
+
+        const node = { type: 'el', name, lname, open: tag.text, children: [], closed: false, void: false };
+        top().children.push(node);
+
+        if (VOID.has(lname) || tag.text.endsWith('/>')) {
+            node.void = true;
+        } else if (RAW.has(lname)) {
+            const closeRe = new RegExp('</' + lname + '[\\s>]', 'gi');
+            closeRe.lastIndex = i;
+            const cm = closeRe.exec(html);
+            const contentEnd = cm ? cm.index : html.length;
+            node.raw = html.slice(i, contentEnd);
+            node.closed = !!cm;
+            const gt = cm ? html.indexOf('>', contentEnd) : -1;
+            i = gt < 0 ? html.length : gt + 1;
+        } else {
+            stack.push(node);
+        }
+    }
+    flushText();
+
+    // 2. 출력
+    const closeOf = n => (n.closed ? `</${n.name}>` : '');
+    const collapse = s => s.replace(/[ \t\r\n\f]+/g, ' ');
+    const trimSp = s => s.replace(/^ +| +$/g, '');
+    const isFlat = n => n.type === 'text' || (n.type === 'el' && INLINE.has(n.lname) && n.children.every(isFlat));
+    const flat = n => {
+        if (n.type === 'text') return collapse(n.value);
+        if (n.raw !== undefined) return n.open + n.raw + closeOf(n);
+        return n.open + n.children.map(flat).join('') + closeOf(n);
+    };
+    const dedent = code => {
+        const ls = code.replace(/\r/g, '').split('\n');
+        while (ls.length && !ls[0].trim()) ls.shift();
+        while (ls.length && !ls[ls.length - 1].trim()) ls.pop();
+        const min = Math.min(...ls.filter(l => l.trim()).map(l => l.match(/^[ \t]*/)[0].length));
+        return ls.map(l => l.slice(min).replace(/\s+$/, ''));
+    };
+
+    const renderEl = (n, depth) => {
+        const ind = '\t'.repeat(depth);
+        if (n.raw !== undefined) {
+            if ((n.lname === 'script' || n.lname === 'style') && n.raw.trim()) {
+                return [ind + n.open, ...dedent(n.raw).map(l => (l ? ind + '\t' + l : '')), ind + closeOf(n)];
+            }
+            return [ind + (n.lname === 'pre' ? flat(n) : n.open + closeOf(n))];
+        }
+        if (n.void) return [ind + n.open];
+        if (n.children.every(isFlat)) {
+            return [ind + n.open + trimSp(n.children.map(flat).join('')) + closeOf(n)];
+        }
+        const lines = [ind + n.open, ...render(n.children, depth + 1)];
+        if (n.closed) lines.push(ind + closeOf(n));
+        return lines;
+    };
+
+    const render = (nodes, depth) => {
+        const ind = '\t'.repeat(depth);
+        const lines = [];
+        let run = [];
+        const flushRun = () => {
+            const s = trimSp(run.map(flat).join(''));
+            if (s) lines.push(ind + s);
+            run = [];
+        };
+        nodes.forEach(n => {
+            if (isFlat(n)) {
+                run.push(n);
+                return;
+            }
+            flushRun();
+            if (n.type === 'comment') lines.push(ind + n.value);
+            else lines.push(...renderEl(n, depth));
+        });
+        flushRun();
+        return lines;
+    };
+
+    return render(root.children, 0).join('\n');
+}
+
+/**
+ * img 태그 src에 ?v=오늘날짜(YYYYMMDD) 추가/갱신 (같은 날짜면 _2, _3 ... 순번 증가)
+ */
+function addImgVersion(html) {
+    const d = new Date();
+    const today = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+
+    const versionUrl = (url) => {
+        const hashIdx = url.indexOf('#');
+        const hash = hashIdx < 0 ? '' : url.slice(hashIdx);
+        const base = hashIdx < 0 ? url : url.slice(0, hashIdx);
+
+        const m = /([?&])v=([^&]*)/.exec(base);
+        if (!m) return `${base}${base.includes('?') ? '&' : '?'}v=${today}${hash}`;
+
+        const cur = /^(\d{8})(?:_(\d+))?$/.exec(m[2]);
+        let next = today;
+        if (cur && cur[1] === today) next = `${today}_${cur[2] ? Number(cur[2]) + 1 : 2}`;
+
+        return base.slice(0, m.index) + `${m[1]}v=${next}` + base.slice(m.index + m[0].length) + hash;
+    };
+
+    return html.replace(/<img\b[^>]*>/gi, tag =>
+        tag.replace(/(\ssrc\s*=\s*)(["'])(.*?)\2/i, (_, pre, q, url) => `${pre}${q}${versionUrl(url)}${q}`)
+    );
+}
+
+/**
  * 자주 사용하는 스크립트 템플릿 생성기
  */
 function getSelectTcoString(nttQuery, imgQuery, tableQuery, aQuery) {
@@ -1031,5 +1231,21 @@ End Sub`);
         }
 
         copy(resultRows.join('\n'));
+    });
+
+    // Func 26: HTML 정렬
+    $('#btnFunc26').click(function () {
+        const val = $('#taFunc26').val();
+        if (!val.trim()) return;
+
+        $('#taFunc26').val(copy(formatHtml(val)));
+    });
+
+    // Func 27: img src 버전(?v=날짜) 추가/갱신
+    $('#btnFunc27').click(function () {
+        const val = $('#taFunc27').val();
+        if (!val.trim()) return;
+
+        $('#taFunc27').val(copy(addImgVersion(val)));
     });
 });
