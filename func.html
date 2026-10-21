@@ -378,7 +378,10 @@
 		<div class="section2">
 			<div class="secTit">
 				<h3>HTML 문법 검사</h3>
-				<button type="button" id="btnFunc28">확인</button>
+				<div>
+					<button type="button" id="btnFunc28">확인</button>
+					<button type="button" id="btnFunc28_2">닫는 태그 자동 수정</button>
+				</div>
 			</div>
 			<div class="div">
 				<div>
@@ -386,10 +389,11 @@
 					<textarea id="taFunc28_1"></textarea>
 				</div>
 				<div>
-					<h4>검사 결과</h4>
+					<h4>검사 결과 / 수정된 HTML</h4>
 					<textarea id="taFunc28_2" readonly></textarea>
 				</div>
 			</div>
+			<div id="resultFunc28" style="white-space: pre-wrap"></div>
 		</div>
 	</body>
 </html>

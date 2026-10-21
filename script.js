@@ -267,6 +267,7 @@ function addImgVersion(html) {
 
 /**
  * HTML 문법 검사 (태그 열기/닫기 짝, 속성 구문, 중복 id). 문제 목록을 문자열 배열로 반환
+ * 반환 배열에는 tagCount(검사한 태그 수)와 edits(닫는 태그 오류의 자동 수정안 [{start, end, text, desc}])가 붙는다
  */
 function validateHtml(html) {
     const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
@@ -274,17 +275,41 @@ function validateHtml(html) {
 
     const lineStarts = [0];
     for (let k = 0; k < html.length; k++) if (html[k] === '\n') lineStarts.push(k + 1);
-    const pos = (idx) => {
+    const lineOf = (idx) => {
         let lo = 0, hi = lineStarts.length - 1;
         while (lo < hi) {
             const mid = (lo + hi + 1) >> 1;
             if (lineStarts[mid] <= idx) lo = mid; else hi = mid - 1;
         }
-        return `${lo + 1}행 ${idx - lineStarts[lo] + 1}열`;
+        return lo;
     };
+    const pos = (idx) => `${lineOf(idx) + 1}행 ${idx - lineStarts[lineOf(idx)] + 1}열`;
+    const lineIndent = (idx) => /^[ \t]*/.exec(html.slice(lineStarts[lineOf(idx)]))[0];
 
     const errors = [];
     const err = (idx, msg) => errors.push(`${pos(idx)} - ${msg}`);
+
+    // 자동 수정안: 누락된 닫는 태그 삽입 / 짝 없는 닫는 태그 삭제
+    const edits = [];
+    const eofItems = []; // 파일 끝에 닫아야 할 요소 (안쪽 -> 바깥쪽 순)
+    let noEofFix = false;
+    const insertCloses = (items, at) => {
+        const ls = lineStarts[lineOf(at)];
+        const desc = `${pos(at)} 앞에 ${items.map(s => `</${s.name}>`).join('')} 추가`;
+        if (!html.slice(ls, at).trim()) {
+            edits.push({ start: ls, end: ls, text: items.map(s => `${lineIndent(s.idx)}</${s.name}>\n`).join(''), desc });
+        } else {
+            edits.push({ start: at, end: at, text: items.map(s => `</${s.name}>`).join(''), desc });
+        }
+    };
+    const deleteTag = (start, endExcl, name) => {
+        const ls = lineStarts[lineOf(start)];
+        let le = html.indexOf('\n', endExcl);
+        le = le < 0 ? html.length : le + 1;
+        const desc = `${pos(start)} </${name}> 삭제`;
+        if (!html.slice(ls, start).trim() && !html.slice(endExcl, le).trim()) edits.push({ start: ls, end: le, text: '', desc });
+        else edits.push({ start, end: endExcl, text: '', desc });
+    };
 
     // 태그 끝(>) 위치 찾기 (속성값 따옴표 안의 > 는 무시). 못 찾으면 -1
     const findTagEnd = (start) => {
@@ -346,13 +371,13 @@ function validateHtml(html) {
 
         if (html.startsWith('<!--', i)) {
             const j = html.indexOf('-->', i + 4);
-            if (j < 0) { err(i, '주석이 닫히지 않음 (-->)'); break; }
+            if (j < 0) { err(i, '주석이 닫히지 않음 (-->)'); noEofFix = true; break; }
             i = j + 3;
             continue;
         }
         if (html[i + 1] === '!' || html[i + 1] === '?') {
             const j = html.indexOf('>', i);
-            if (j < 0) { err(i, '선언(<! 또는 <?)이 닫히지 않음'); break; }
+            if (j < 0) { err(i, '선언(<! 또는 <?)이 닫히지 않음'); noEofFix = true; break; }
             i = j + 1;
             continue;
         }
@@ -368,6 +393,7 @@ function validateHtml(html) {
         const end = findTagEnd(i);
         if (end < 0) {
             err(i, `<${m[2]} 태그가 닫히지 않았거나 속성 따옴표 짝이 맞지 않음`);
+            noEofFix = true;
             const next = html.indexOf('<', i + 1);
             if (next < 0) break;
             i = next;
@@ -387,12 +413,14 @@ function validateHtml(html) {
             const k = stack.map(s => s.lname).lastIndexOf(lname);
             if (VOID.has(lname)) {
                 err(tagIdx, `</${name}> 빈 요소(void)는 닫는 태그를 쓸 수 없음`);
+                deleteTag(tagIdx, end + 1, name);
             } else if (k < 0) {
                 err(tagIdx, `</${name}> 여는 태그 없이 닫힘`);
+                deleteTag(tagIdx, end + 1, name);
             } else {
-                for (let q = stack.length - 1; q > k; q--) {
-                    err(stack[q].idx, `<${stack[q].name}> 닫는 태그 없음 (${pos(tagIdx)}의 </${name}>에서 닫힘 처리)`);
-                }
+                const missing = stack.slice(k + 1).reverse();
+                missing.forEach(s => err(s.idx, `<${s.name}> 닫는 태그 없음 (${pos(tagIdx)}의 </${name}>에서 닫힘 처리)`));
+                if (missing.length) insertCloses(missing, tagIdx);
                 stack.length = k;
             }
             continue;
@@ -414,6 +442,7 @@ function validateHtml(html) {
             const cm = closeRe.exec(html);
             if (!cm) {
                 err(tagIdx, `<${name}> 닫는 태그 없음`);
+                eofItems.push({ name, idx: tagIdx });
                 break;
             }
             const gt = html.indexOf('>', cm.index);
@@ -421,17 +450,50 @@ function validateHtml(html) {
             continue;
         }
 
+        // 형제 요소가 이어질 때 앞 요소의 닫는 태그 누락 (예: <li>a<li>b)
+        const SIBLING_CLOSES = { li: ['li'], dt: ['dt', 'dd'], dd: ['dt', 'dd'], td: ['td', 'th'], th: ['td', 'th'], tr: ['td', 'th', 'tr'], option: ['option'], p: ['p'] };
+        const sibling = SIBLING_CLOSES[lname] || [];
+        const unclosed = [];
+        while (stack.length && sibling.includes(stack[stack.length - 1].lname)) unclosed.push(stack.pop());
+        unclosed.forEach(s => err(s.idx, `<${s.name}> 닫는 태그 없음 (${pos(tagIdx)}의 <${name}> 앞에서 닫힘 처리)`));
+        if (unclosed.length) insertCloses(unclosed, tagIdx);
+
         stack.push({ lname, name, idx: tagIdx });
     }
 
     stack.forEach(s => err(s.idx, `<${s.name}> 닫는 태그 없음`));
+    eofItems.push(...stack.slice().reverse());
+    if (!noEofFix && eofItems.length) {
+        const endsNl = html.endsWith('\n');
+        edits.push({
+            start: html.length,
+            end: html.length,
+            text: (endsNl ? '' : '\n') + eofItems.map(s => `${lineIndent(s.idx)}</${s.name}>`).join('\n') + (endsNl ? '\n' : ''),
+            desc: `문서 끝에 ${eofItems.map(s => `</${s.name}>`).join('')} 추가`
+        });
+    }
 
     errors.sort((a, b) => {
         const pa = a.match(/^(\d+)행 (\d+)열/), pb = b.match(/^(\d+)행 (\d+)열/);
         return pa[1] - pb[1] || pa[2] - pb[2];
     });
     errors.tagCount = tagCount;
+    errors.edits = edits;
     return errors;
+}
+
+/**
+ * 닫는 태그 오류 자동 수정 (누락된 닫는 태그는 감싸는 부모의 닫는 태그 직전에 삽입, 짝 없는 닫는 태그는 삭제)
+ * 반환: { html: 수정된 HTML, fixes: 수정 내역 문자열 배열, remaining: 수정 후에도 남은 오류 배열 }
+ */
+function fixHtml(html) {
+    const edits = validateHtml(html).edits;
+    let out = html;
+    edits
+        .map((e, i) => ({ ...e, i }))
+        .sort((a, b) => b.start - a.start || b.i - a.i)
+        .forEach(e => { out = out.slice(0, e.start) + e.text + out.slice(e.end); });
+    return { html: out, fixes: edits.map(e => e.desc), remaining: validateHtml(out) };
 }
 
 /**
@@ -1429,6 +1491,20 @@ End Sub`);
             : `문제 없음 (태그 ${errors.tagCount}개 검사)`;
 
         $('#taFunc28_2').val(result);
+        $('#resultFunc28').text('');
         showPopup();
+    });
+
+    // Func 28: 닫는 태그 오류 자동 수정
+    $('#btnFunc28_2').click(function () {
+        const val = $('#taFunc28_1').val();
+        if (!val.trim()) return;
+
+        const r = fixHtml(val);
+        const lines = [r.fixes.length ? `자동 수정 ${r.fixes.length}건` : '자동 수정할 항목 없음', ...r.fixes];
+        if (r.remaining.length) lines.push(`수동 확인 필요 ${r.remaining.length}건`, ...r.remaining);
+
+        $('#taFunc28_2').val(copy(r.html));
+        $('#resultFunc28').text(lines.join('\n'));
     });
 });
