@@ -266,6 +266,175 @@ function addImgVersion(html) {
 }
 
 /**
+ * HTML 문법 검사 (태그 열기/닫기 짝, 속성 구문, 중복 id). 문제 목록을 문자열 배열로 반환
+ */
+function validateHtml(html) {
+    const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+    const RAW = new Set(['script', 'style', 'textarea']);
+
+    const lineStarts = [0];
+    for (let k = 0; k < html.length; k++) if (html[k] === '\n') lineStarts.push(k + 1);
+    const pos = (idx) => {
+        let lo = 0, hi = lineStarts.length - 1;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (lineStarts[mid] <= idx) lo = mid; else hi = mid - 1;
+        }
+        return `${lo + 1}행 ${idx - lineStarts[lo] + 1}열`;
+    };
+
+    const errors = [];
+    const err = (idx, msg) => errors.push(`${pos(idx)} - ${msg}`);
+
+    // 태그 끝(>) 위치 찾기 (속성값 따옴표 안의 > 는 무시). 못 찾으면 -1
+    const findTagEnd = (start) => {
+        let quote = '', prev = '';
+        for (let i = start; i < html.length; i++) {
+            const ch = html[i];
+            if (quote) {
+                if (ch === quote) quote = '';
+            } else if (ch === '>') {
+                return i;
+            } else if ((ch === '"' || ch === "'") && prev === '=') {
+                quote = ch;
+            } else if (/\s/.test(ch)) {
+                continue;
+            }
+            prev = ch;
+        }
+        return -1;
+    };
+
+    // 속성 구문 검사
+    const checkAttrs = (idx, tagName, body) => {
+        const seen = new Set();
+        const re = /\s*([^\s"'<>\/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/y;
+        let p = 0;
+        let id = null;
+        while (p < body.length) {
+            const ws = /^\s*/.exec(body.slice(p))[0].length;
+            if (p + ws >= body.length) break;
+            if (body[p + ws] === '/' && p + ws === body.length - 1) break;
+            re.lastIndex = p;
+            const m = re.exec(body);
+            if (!m) {
+                err(idx, `<${tagName}> 속성 구문 오류: "${body.slice(p).trim().slice(0, 30)}"`);
+                break;
+            }
+            const name = m[1].toLowerCase();
+            if (seen.has(name)) err(idx, `<${tagName}> 속성 중복: ${name}`);
+            seen.add(name);
+            if (name === 'id') id = m[2] ?? m[3] ?? m[4];
+            p = re.lastIndex;
+            if ((m[2] !== undefined || m[3] !== undefined) && p < body.length && !/[\s\/]/.test(body[p])) {
+                err(idx, `<${tagName}> 속성 사이에 공백 없음: ${name}`);
+            }
+        }
+        return id;
+    };
+
+    const stack = []; // { lname, name, idx }
+    const ids = new Map();
+    let tagCount = 0;
+    const tagRe = /<(\/?)([A-Za-z][^\s\/>]*)/y;
+    let i = 0;
+
+    while (i < html.length) {
+        const lt = html.indexOf('<', i);
+        if (lt < 0) break;
+        i = lt;
+
+        if (html.startsWith('<!--', i)) {
+            const j = html.indexOf('-->', i + 4);
+            if (j < 0) { err(i, '주석이 닫히지 않음 (-->)'); break; }
+            i = j + 3;
+            continue;
+        }
+        if (html[i + 1] === '!' || html[i + 1] === '?') {
+            const j = html.indexOf('>', i);
+            if (j < 0) { err(i, '선언(<! 또는 <?)이 닫히지 않음'); break; }
+            i = j + 1;
+            continue;
+        }
+
+        tagRe.lastIndex = i;
+        const m = tagRe.exec(html);
+        if (!m) {
+            // 태그가 아닌 '<' (예: "a < b")
+            i++;
+            continue;
+        }
+
+        const end = findTagEnd(i);
+        if (end < 0) {
+            err(i, `<${m[2]} 태그가 닫히지 않았거나 속성 따옴표 짝이 맞지 않음`);
+            const next = html.indexOf('<', i + 1);
+            if (next < 0) break;
+            i = next;
+            continue;
+        }
+
+        tagCount++;
+        const name = m[2];
+        const lname = name.toLowerCase();
+        const body = html.slice(i + m[0].length, end);
+        const tagIdx = i;
+        i = end + 1;
+
+        if (m[1]) {
+            // 닫는 태그
+            if (body.trim()) err(tagIdx, `</${name}> 닫는 태그에 불필요한 내용: "${body.trim()}"`);
+            const k = stack.map(s => s.lname).lastIndexOf(lname);
+            if (VOID.has(lname)) {
+                err(tagIdx, `</${name}> 빈 요소(void)는 닫는 태그를 쓸 수 없음`);
+            } else if (k < 0) {
+                err(tagIdx, `</${name}> 여는 태그 없이 닫힘`);
+            } else {
+                for (let q = stack.length - 1; q > k; q--) {
+                    err(stack[q].idx, `<${stack[q].name}> 닫는 태그 없음 (${pos(tagIdx)}의 </${name}>에서 닫힘 처리)`);
+                }
+                stack.length = k;
+            }
+            continue;
+        }
+
+        // 여는 태그
+        const selfClosed = /\/\s*$/.test(body);
+        const id = checkAttrs(tagIdx, name, body.replace(/\/\s*$/, ''));
+        if (id) {
+            if (ids.has(id)) err(tagIdx, `id 중복: "${id}" (${pos(ids.get(id))}에서 이미 사용)`);
+            else ids.set(id, tagIdx);
+        }
+
+        if (VOID.has(lname) || selfClosed) continue;
+
+        if (RAW.has(lname)) {
+            const closeRe = new RegExp('</' + lname + '[\\s>]', 'gi');
+            closeRe.lastIndex = i;
+            const cm = closeRe.exec(html);
+            if (!cm) {
+                err(tagIdx, `<${name}> 닫는 태그 없음`);
+                break;
+            }
+            const gt = html.indexOf('>', cm.index);
+            i = gt < 0 ? html.length : gt + 1;
+            continue;
+        }
+
+        stack.push({ lname, name, idx: tagIdx });
+    }
+
+    stack.forEach(s => err(s.idx, `<${s.name}> 닫는 태그 없음`));
+
+    errors.sort((a, b) => {
+        const pa = a.match(/^(\d+)행 (\d+)열/), pb = b.match(/^(\d+)행 (\d+)열/);
+        return pa[1] - pb[1] || pa[2] - pb[2];
+    });
+    errors.tagCount = tagCount;
+    return errors;
+}
+
+/**
  * 자주 사용하는 스크립트 템플릿 생성기
  */
 function getSelectTcoString(nttQuery, imgQuery, tableQuery, aQuery) {
@@ -1247,5 +1416,19 @@ End Sub`);
         if (!val.trim()) return;
 
         $('#taFunc27').val(copy(addImgVersion(val)));
+    });
+
+    // Func 28: HTML 문법 검사
+    $('#btnFunc28').click(function () {
+        const val = $('#taFunc28_1').val();
+        if (!val.trim()) return;
+
+        const errors = validateHtml(val);
+        const result = errors.length
+            ? `오류 ${errors.length}건\n${errors.join('\n')}`
+            : `문제 없음 (태그 ${errors.tagCount}개 검사)`;
+
+        $('#taFunc28_2').val(result);
+        showPopup();
     });
 });
